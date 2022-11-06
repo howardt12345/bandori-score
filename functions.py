@@ -5,7 +5,7 @@ import pytesseract
 import json
 
 class SongInfo:
-  def __init__(self, songName, difficulty, rank, score, highScore, maxCombo, notes):
+  def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo="", notes={}):
     self.songName = songName
     self.difficulty = difficulty
     self.rank = rank
@@ -33,6 +33,18 @@ class SongInfo:
   
   def toJSON(self):
     return json.dumps(self.toDict())
+
+  def fromDict(self, dict):
+    self.songName = dict["songName"]
+    self.difficulty = dict["difficulty"]
+    self.rank = dict["rank"]
+    self.score = dict["score"]
+    self.highScore = dict["highScore"]
+    self.maxCombo = dict["maxCombo"]
+    self.notes = dict["notes"]
+
+  def fromJSON(self, json):
+    self.fromDict(json.loads(json))
 
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
