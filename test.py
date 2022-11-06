@@ -33,6 +33,7 @@ def fetchNoteTypes(path):
       imgs.append(( template, types[i], ratios[i], tolerances[i] ))
   return imgs
 
+# Function to fetch the templates for the different difficulties
 def fetchDifficulties(path):
   difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
   imgs = []
@@ -43,12 +44,17 @@ def fetchDifficulties(path):
       imgs.append(( template, difficulty ))
   return imgs
 
+# Fetch Max combo reference image
+def fetchMaxCombo(path):
+  ext = "png" if path == 'direct' else "jpg"
+  return cv2.imread(f'assets/{path}/Max combo.{ext}')
+
 # Function to get the rank of the image result
-def getRank(image, mode):
-  if mode == 'direct':
-    templates = fetchRanks('direct')
-  else:
+def getRank(image, mode='cropped'):
+  if mode == 'cropped':
     templates = fetchRanks('cropped')
+  else:
+    templates = fetchRanks('direct')
 
   results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), rank) for template, rank in templates]
   # Get the rank of the best match
@@ -57,11 +63,11 @@ def getRank(image, mode):
   return rank
 
 # Function to get the different note counts of the image result
-def getNotes(image, mode):
-  if mode == 'direct':
-    templates = fetchNoteTypes('direct')
-  else:
+def getNotes(image, mode='cropped'):
+  if mode == 'cropped':
     templates = fetchNoteTypes('cropped')
+  else:
+    templates = fetchNoteTypes('direct')
 
   noteScores = {}
 
@@ -85,7 +91,7 @@ def getNotes(image, mode):
   return noteScores
 
 # Function to get the score and high score of the image result
-def getScore(image):
+def getScore(image, mode='cropped'):
   line = cv2.matchTemplate(image, cv2.imread('assets/cropped/line.jpg'), cv2.TM_CCOEFF_NORMED)
   h, w, _ = cv2.imread('assets/cropped/line.jpg').shape
   y, x = np.unravel_index(np.argmax(line), line.shape)
@@ -106,11 +112,11 @@ def getScore(image):
   return (int(score) if score.isdecimal() else 0, int(highScore) if highScore.isdecimal() else 0)
 
 # Function to get the song and difficulty level of the image result
-def getSong(image):
-  if mode == 'direct':
-    templates = fetchDifficulties('direct')
-  else:
+def getSong(image, mode='cropped'):
+  if mode == 'cropped':
     templates = fetchDifficulties('cropped')
+  else:
+    templates = fetchDifficulties('direct')
 
   results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), difficulty) for template, difficulty in templates]
   # Get the result and difficulty of the best match
@@ -127,14 +133,35 @@ def getSong(image):
 
   return (data.strip(), difficulty)
 
+def getMaxCombo(image, mode='cropped'):
+  if mode == 'cropped':
+    template = fetchMaxCombo('cropped')
+  else:
+    template = fetchMaxCombo('direct')
 
-image = cv2.imread('testdata/test8.jpg')
+  result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+  h, w, _ = template.shape
+  y, x = np.unravel_index(np.argmax(result), result.shape)
+  tl_x, tl_y = x+5, y+h+10
+  br_x, br_y = x+w-5, y+h+65
+
+  image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
+
+  ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
+  data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+
+  return data.strip()
+
+
+image = cv2.imread('testdata/test.jpg')
 mode = 'cropped'
 
 print(getRank(image, mode))
 print(getNotes(image, mode))
 print(getScore(image))
 print(getSong(image))
+print(getMaxCombo(image))
 
 # Test on directory of images
 test = True
@@ -145,4 +172,5 @@ if test:
     print(getRank(image, mode))
     print(getNotes(image, mode))
     print(getScore(image))
-    print(getSong(image))
+    print(getSong(image, mode))
+    print(getMaxCombo(image))
