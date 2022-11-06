@@ -1,26 +1,39 @@
-# bot.py
+# Bot with slash commands 
+
 import os
-import discord
 from dotenv import load_dotenv
+
+import interactions
+
+import cv2
+import numpy as np
+
+from api import ScoreAPI
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-intents = discord.Intents.default()
-intents.message_content = True
+bot = interactions.Client(token=TOKEN)
+scoreAPI = ScoreAPI()
 
-client = discord.Client(intents=intents)
+@bot.command(
+    name="image_command",
+    description="test command",
+    options = [
+        interactions.Option(
+            name="image",
+            description="Test image",
+            type=interactions.OptionType.ATTACHMENT,
+            required=True,
+        ),
+    ],
+)
+async def image_command(ctx: interactions.CommandContext, image: interactions.api.models.message.Attachment):
+    image_stream = await image.download()
+    img_buffer = image_stream.read()
+    img = cv2.imdecode(np.frombuffer(img_buffer, np.uint8), cv2.IMREAD_COLOR)
 
-@client.event
-async def on_ready():
-    print(f'We have logged in as {client.user}')
+    output = scoreAPI.basicOutput(img)
+    await ctx.send(output)
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
-
-client.run(TOKEN)
+bot.start()
