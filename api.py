@@ -1,9 +1,5 @@
 # The functions for getting song information from an image
 
-# shut opencv errors up
-import os
-os.environ["OPENCV_LOG_LEVEL"]="SILENT"
-
 import numpy as np
 import cv2
 import pytesseract
@@ -179,6 +175,7 @@ def getMaxCombo(image, mode='cropped'):
   # Read the max combo score from the image
   ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
   data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+  data = data.strip()
 
   # Return the max combo score, defaulting to 0 if the score is not a number
   return int(data) if data.isdecimal() else 0
