@@ -1,13 +1,12 @@
+# The functions for getting song information from an image
+
 # shut opencv errors up
 import os
 os.environ["OPENCV_LOG_LEVEL"]="SILENT"
 
-import matplotlib.pyplot as plt
 import numpy as np
-
 import cv2
 import pytesseract
-import glob
 
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
