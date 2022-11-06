@@ -7,7 +7,7 @@ import pytesseract
 import matplotlib.pyplot as plt
 from functions import *
 
-
+# ScoreAPI class so that templates only need to be initialized once
 class ScoreAPI:
   def __init__(self,  mode='cropped'):
     self.mode = mode
@@ -76,6 +76,7 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI)
     lines = data.strip().splitlines()
 
+    # If there are no scores, return a negative result
     if len(lines) == 0:
       return (-1,-1)
     
@@ -136,16 +137,39 @@ class ScoreAPI:
     return maxCombo
 
   def basicOutput(self, image):
-      # Get the song name and difficulty
-      song, difficulty = self.getSong(image)
-      # Get the score rank
-      rank = self.getRank(image)
-      # Get the score and high score
-      score, highScore = self.getScore(image)
-      # Get the max combo
-      maxCombo = self.getMaxCombo(image)
-      # Get the note type scores
-      notes = self.getNotes(image)
+    # Get the song name and difficulty
+    song, difficulty = self.getSong(image)
+    # Get the score rank
+    rank = self.getRank(image)
+    # Get the score and high score
+    score, highScore = self.getScore(image)
+    # Get the max combo
+    maxCombo = self.getMaxCombo(image)
+    # Get the note type scores
+    notes = self.getNotes(image)
 
-      # Return the results in a formatted string
-      return f"({difficulty}) {song}\nRank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}\n{notes}"
+    # Return the results in a formatted string
+    return f"({difficulty}) {song}\nRank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}\n{notes}"
+
+  def jsonOutput(self, image):
+    # Get the song name and difficulty
+    song, difficulty = self.getSong(image)
+    # Get the score rank
+    rank = self.getRank(image)
+    # Get the score and high score
+    score, highScore = self.getScore(image)
+    # Get the max combo
+    maxCombo = self.getMaxCombo(image)
+    # Get the note type scores
+    notes = self.getNotes(image)
+
+    # Return the results in a json object
+    return {
+      "song": song,
+      "difficulty": difficulty,
+      "rank": rank,
+      "score": score,
+      "highScore": highScore,
+      "maxCombo": maxCombo,
+      "notes": notes
+    }
