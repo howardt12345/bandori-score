@@ -105,13 +105,15 @@ async def confirmSongInfo(ctx: commands.Context, oldSong: SongInfo):
 
 @bot.command()
 async def newScore(ctx: commands.Context):
-  await ctx.send('Processing scores...')
-
   user = ctx.message.author
 
   # Get all the attachments
   files = ctx.message.attachments
+
+  await ctx.send(f'Processing scores of {len(files)} songs...')
+
   for x, file in enumerate(files):
+    await ctx.send(f'Song {x+1}/{len(files)}')
     # Get the file
     fp = BytesIO()
     await file.save(fp)
@@ -123,7 +125,8 @@ async def newScore(ctx: commands.Context):
     output = scoreAPI.getSongInfo(img)
 
     # Display the song info to the user and wait for a response
-    message = await ctx.send(f"Song {x+1}/{len(files)}\n```{songInfoToStr(output)}```")
+    fp.seek(0)
+    message = await ctx.send(f"Song {x+1}/{len(files)}\n```{songInfoToStr(output)}```", file=discord.File(fp, filename=file.filename, spoiler=file.is_spoiler()))
 
     await message.add_reaction('✅')
     await message.add_reaction('❓')
@@ -140,7 +143,7 @@ async def newScore(ctx: commands.Context):
     else:
       if str(reaction.emoji) == '✅':
         # Add to database
-        await ctx.send(f'{output.songName} added to database')
+        await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database')
         pass
       elif str(reaction.emoji) == '❓':
         # Have user confirm song info
@@ -148,11 +151,12 @@ async def newScore(ctx: commands.Context):
         pass
       elif str(reaction.emoji) == '❌':
         # Ignore
+        output = None
         await ctx.send('Ignoring')
         pass
 
     print(output)
 
-  await ctx.send('Done processing scores')
+  await ctx.send(f'Done processing scores of {len(files)} songs!')
 
 bot.run(TOKEN)
