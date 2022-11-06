@@ -12,20 +12,20 @@ import numpy as np
 
 from api import ScoreAPI
 
+# Get token from .env
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-import discord
-
+# Create bot
 intents = discord.Intents.default()
 intents.message_content = True
-
 bot = commands.Bot(command_prefix='$', intents=intents)
 
+# Create API
 scoreAPI = ScoreAPI()
 
 @bot.command()
-async def hello(ctx):
+async def newScore(ctx: commands.Context):
   await ctx.send('Processing scores...')
   files = ctx.message.attachments
   for file in files:
