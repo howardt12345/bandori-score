@@ -1,12 +1,9 @@
 # The functions for getting song information from an image
-
 import numpy as np
 import cv2
 import pytesseract
 
-import matplotlib.pyplot as plt
 from functions import *
-
 
 
 # ScoreAPI class so that templates only need to be initialized once
@@ -101,7 +98,7 @@ class ScoreAPI:
     y, x = np.unravel_index(np.argmax(result), result.shape)
 
     # Make a bounding box right of the difficulty for the song name
-    tl_x, tl_y = x+w, y
+    tl_x, tl_y = x+w+10, y
     br_x, br_y = x+w+750, y+h
 
     # Make image black and white for OCR
