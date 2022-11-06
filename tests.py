@@ -9,20 +9,13 @@ from api import *
 
 # Test on directory of images
 def testDir(path):
-  mode = 'cropped'
-
   images = [cv2.imread(image) for image in glob.glob(f"testdata/{path}/*.jpg")]
+
+  scoreAPI = ScoreAPI()
 
   for image in images:
     print("---")
-    songName, difficulty = getSong(image, mode)
-    rank = getRank(image, mode)
-    score, highScore = getScore(image, mode)
-    maxCombo = getMaxCombo(image, mode)
-    notes = getNotes(image, mode)
-    print(f"{songName} - {difficulty}")
-    print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
-    print(notes)
+    print(scoreAPI.basicOutput(image))
 
 # Test on single image
 def testImage(path):
@@ -40,5 +33,25 @@ def testImage(path):
   print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
   print(notes)
 
-testDir('multilive')
-# testImage('testdata/test9.jpg')
+
+# Test on single image
+def testImage2(path):
+  mode = 'cropped'
+
+  image = cv2.imread(path)
+
+  scoreAPI = ScoreAPI()
+
+  print("---")
+  songName, difficulty = scoreAPI.getSong(image)
+  rank = scoreAPI.getRank(image)
+  score, highScore = scoreAPI.getScore(image)
+  maxCombo = scoreAPI.getMaxCombo(image)
+  notes = scoreAPI.getNotes(image)
+  print(f"{songName} - {difficulty}")
+  print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
+  print(notes)
+
+testDir('live')
+# testImage('testdata/test.jpg')
+# testImage2('testdata/test.jpg')
