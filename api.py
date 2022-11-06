@@ -7,6 +7,8 @@ import pytesseract
 import matplotlib.pyplot as plt
 from functions import *
 
+
+
 # ScoreAPI class so that templates only need to be initialized once
 class ScoreAPI:
   def __init__(self,  mode='cropped'):
@@ -121,20 +123,35 @@ class ScoreAPI:
     y, x = np.unravel_index(np.argmax(result), result.shape)
 
     # Get the bounding box where the max combo is
-    tl_x, tl_y = x+w+20, y-6
-    br_x, br_y = x+int(w*1.5), y+h+10
+    tl_x, tl_y = x+5, y+h+10
+    br_x, br_y = x+w-5, y+h+65
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
+    (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
 
-    # Read the max combo from the image
+    # Read the max combo score from the image
     ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
     data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-    maxCombo = data.strip()
+    data = data.strip()
 
-    # Return the max combo
-    return maxCombo
+    # Return the max combo score, defaulting to 0 if the score is not a number
+    return int(data) if data.isdecimal() else 0
+
+  def getSongInfo(self, image):
+      # Get the song name and difficulty
+      song, difficulty = self.getSong(image)
+      # Get the score rank
+      rank = self.getRank(image)
+      # Get the score and high score
+      score, highScore = self.getScore(image)
+      # Get the max combo
+      maxCombo = self.getMaxCombo(image)
+      # Get the note type scores
+      notes = self.getNotes(image)
+
+      songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes)
+      return songInfo
 
   def basicOutput(self, image):
     # Get the song name and difficulty

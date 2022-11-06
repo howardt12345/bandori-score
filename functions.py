@@ -2,7 +2,37 @@
 import numpy as np
 import cv2
 import pytesseract
+import json
 
+class SongInfo:
+  def __init__(self, songName, difficulty, rank, score, highScore, maxCombo, notes):
+    self.songName = songName
+    self.difficulty = difficulty
+    self.rank = rank
+    self.score = score
+    self.highScore = highScore
+    self.maxCombo = maxCombo
+    self.notes = notes
+
+  def __str__(self):
+    return f"{self.songName} - {self.difficulty}\nRank: {self.rank}, Score: {self.score}, High Score: {self.highScore}, Max Combo: {self.maxCombo}\n{self.notes}"
+
+  def __repr__(self):
+    return self.__str__()
+
+  def toDict(self):
+    return {
+      "songName": self.songName,
+      "difficulty": self.difficulty,
+      "rank": self.rank,
+      "score": self.score,
+      "highScore": self.highScore,
+      "maxCombo": self.maxCombo,
+      "notes": self.notes
+    }
+  
+  def toJSON(self):
+    return json.dumps(self.toDict())
 
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):

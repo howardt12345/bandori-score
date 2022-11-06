@@ -36,22 +36,13 @@ def testImage(path):
 
 # Test on single image
 def testImage2(path):
-  mode = 'cropped'
-
   image = cv2.imread(path)
 
   scoreAPI = ScoreAPI()
 
   print("---")
-  songName, difficulty = scoreAPI.getSong(image)
-  rank = scoreAPI.getRank(image)
-  score, highScore = scoreAPI.getScore(image)
-  maxCombo = scoreAPI.getMaxCombo(image)
-  notes = scoreAPI.getNotes(image)
-  print(f"{songName} - {difficulty}")
-  print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
-  print(notes)
+  print(scoreAPI.getSongInfo(image))
 
-testDir('live')
-# testImage('testdata/test.jpg')
-# testImage2('testdata/test.jpg')
+# testDir('live')
+testImage('testdata/test.jpg')
+testImage2('testdata/test.jpg')
