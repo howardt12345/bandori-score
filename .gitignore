@@ -1,2 +1,3 @@
 testdata/
 *.pyc
+.env
