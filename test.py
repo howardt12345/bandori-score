@@ -183,25 +183,3 @@ def getMaxCombo(image, mode='cropped'):
 
   # Return the max combo score, defaulting to 0 if the score is not a number
   return int(data) if data.isdecimal() else 0
-
-
-image = cv2.imread('testdata/test.jpg')
-mode = 'cropped'
-
-print(getRank(image, mode))
-print(getNotes(image, mode))
-print(getScore(image))
-print(getSong(image))
-print(getMaxCombo(image))
-
-# Test on directory of images
-test = True
-if test:
-  images = [cv2.imread(image) for image in glob.glob("testdata/multilive/*.jpg")]
-
-  for image in images:
-    print(getRank(image, mode))
-    print(getNotes(image, mode))
-    print(getScore(image))
-    print(getSong(image, mode))
-    print(getMaxCombo(image))
