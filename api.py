@@ -4,6 +4,8 @@ import numpy as np
 import cv2
 import pytesseract
 
+import matplotlib.pyplot as plt
+
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
   # List of ranks
@@ -47,6 +49,12 @@ def fetchDifficulties(path):
       # If the template exists, add it to the list
       imgs.append(( template, difficulty ))
   return imgs
+
+
+# Fetch score icon
+def fetchScoreIcon(path):
+  ext = "png" if path == 'direct' else "jpg"
+  return cv2.imread(f'assets/{path}/ScoreIcon.{ext}')
 
 
 # Fetch Max combo reference image
@@ -100,13 +108,14 @@ def getNotes(image, mode='cropped'):
 # Function to get the score and high score of the image result
 def getScore(image, mode='cropped'):
   # Get the location of the line separator
-  line = cv2.matchTemplate(image, cv2.imread('assets/cropped/line.jpg'), cv2.TM_CCOEFF_NORMED)
-  h, w, _ = cv2.imread('assets/cropped/line.jpg').shape
-  y, x = np.unravel_index(np.argmax(line), line.shape)
+  template = fetchScoreIcon(mode)
+  result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+  h, w, _ = template.shape
+  y, x = np.unravel_index(np.argmax(result), result.shape)
 
   # Use location of line separator to get the bounding box of the score
-  tl_x, tl_y = x+35, y-110
-  br_x, br_y = x+w, y+h
+  tl_x, tl_y = x+w+5, y-10
+  br_x, br_y = x+w+650, y+h+60
 
   # Make image black and white for OCR
   image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -126,10 +135,7 @@ def getScore(image, mode='cropped'):
 
 # Function to get the song and difficulty level of the image result
 def getSong(image, mode='cropped'):
-  if mode == 'cropped':
-    templates = fetchDifficulties('cropped')
-  else:
-    templates = [] # Only works with cropped mode
+  templates = fetchDifficulties(mode)
 
   # Try all the ranks and get the best match
   results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), difficulty) for template, difficulty in templates]
@@ -170,7 +176,7 @@ def getMaxCombo(image, mode='cropped'):
 
   # Make image black and white for OCR
   image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
+  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
 
   # Read the max combo score from the image
   ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
