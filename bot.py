@@ -30,7 +30,7 @@ scoreAPI = ScoreAPI(draw=True)
 db = Database()
 
 @bot.command()
-async def newScore(ctx: commands.Context):
+async def newScore(ctx: commands.Context, defaultTag: str = ""):
   user = ctx.message.author
 
   # Get all the attachments
@@ -49,7 +49,7 @@ async def newScore(ctx: commands.Context):
 
     # Get the song info
     output = scoreAPI.getSongInfo(img)
-    tag = tags[0]
+    tag = defaultTag if defaultTag in tags else tags[0]
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
@@ -105,7 +105,7 @@ async def newScore(ctx: commands.Context):
 
 
 @bot.command()
-async def getScore(ctx: commands.Context, *, query: str):
+async def getScore(ctx: commands.Context, *, query: str = ""):
   user = ctx.message.author
   if not query:
     scores = db.get_songs(str(user.id))
