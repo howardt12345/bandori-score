@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import pytesseract
 
-from functions import *
+from functions import SongInfo, fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
 
 
 # ScoreAPI class so that templates only need to be initialized once
@@ -50,7 +50,7 @@ class ScoreAPI:
       # Read the score of the note type from the image
       ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
       data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-      noteScores[type] = data.strip()
+      noteScores[type] = int(data.strip()) if data.strip().isdecimal() else -1
     
     # Return the note type scores in a map
     return noteScores
@@ -77,7 +77,7 @@ class ScoreAPI:
 
     # If there are no scores, return a negative result
     if len(lines) == 0:
-      return (-1,-1)
+      return (-1, -1)
     
     # Get the score and high score
     score = lines[0].split(" ")[-1].strip()

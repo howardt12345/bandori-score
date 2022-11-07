@@ -3,9 +3,12 @@ import numpy as np
 import cv2
 import pytesseract
 import json
+from discord.ext import commands
+import asyncio
+from consts import *
 
 class SongInfo:
-  def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo="", notes={}):
+  def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo=-1, notes={}):
     self.songName = songName
     self.difficulty = difficulty
     self.rank = rank
@@ -34,22 +37,18 @@ class SongInfo:
   def toJSON(self):
     return json.dumps(self.toDict())
 
-  def fromDict(self, dict):
-    self.songName = dict["songName"]
-    self.difficulty = dict["difficulty"]
-    self.rank = dict["rank"]
-    self.score = dict["score"]
-    self.highScore = dict["highScore"]
-    self.maxCombo = dict["maxCombo"]
-    self.notes = dict["notes"]
+  @staticmethod
+  def fromDict(dict):
+    return SongInfo(dict["songName"], dict["difficulty"], dict["rank"], dict["score"], dict["highScore"], dict["maxCombo"], dict["notes"])
 
-  def fromJSON(self, json):
-    self.fromDict(json.loads(json))
+  @staticmethod
+  def fromJSON(json):
+    return SongInfo.fromDict(json.loads(json))
+
 
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
   # List of ranks
-  ranks = ['SS', 'S', 'A', 'B', 'C', 'D']
   imgs = []
   for rank in ranks:
     ext = "png" if path == 'direct' else "jpg"
@@ -64,7 +63,6 @@ def fetchRanks(path):
 # Returns the name of the note type as well as variables for OCR ROI positioning
 def fetchNoteTypes(path):
   # List of note types and variables for OCR matching
-  types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
   ratios = [2.1, 2.75, 2.8, 4.3, 3.8]
   tolerances = [(0, 0), (1, 0), (0, 0), (0, 3), (2, 5)] # The top and bottom tolerances of the note type bounding box
   imgs = []
@@ -80,7 +78,6 @@ def fetchNoteTypes(path):
 # Function to fetch the templates for the different difficulties
 # This will not work with 'direct' mode
 def fetchDifficulties(path):
-  difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
   imgs = []
   for difficulty in difficulties:
     ext = "png" if path == 'direct' else "jpg"
@@ -103,145 +100,106 @@ def fetchMaxCombo(path):
   return cv2.imread(f'assets/{path}/Max combo.{ext}')
 
 
-# Function to get the rank of the image result
-def getRank(image, mode='cropped'):
-  templates = fetchRanks(mode)
+# Confirm a song info object to a formatted string
+def songInfoToStr(song: SongInfo):
+  songStr = f"({song.difficulty}) {song.songName}\n"
+  songStr += f"Rank: {song.rank}\n"
+  songStr += f"Score: {song.score if song.score >= 0 else '?'}\n"
+  songStr += f"High Score: {song.highScore if song.highScore >= 0 else '?'}\n"
+  songStr += f"Max Combo: {song.maxCombo if song.maxCombo >= 0 else '?'}\n"
+  songStr += f"Note scores:\n"
+  for key in song.notes:
+    songStr += f"- {key}: {song.notes[key] if song.notes[key] >= 0 else '?'}\n"
+  return songStr
 
-  # Try all the ranks and get the best match
-  results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), rank) for template, rank in templates]
-  # Get the rank of the best match
-  _, rank = max(results, key=lambda x: x[0].max())
-
-  return rank
-
-# Function to get the different note counts of the image result
-def getNotes(image, mode='cropped'):
-  templates = fetchNoteTypes(mode)
-
-  noteScores = {}
-
-  for template in templates:
-    tmp, type, ratio, tolerance = template
-
-    # Get the location of the note type row
-    result = cv2.matchTemplate(image, tmp, cv2.TM_CCOEFF_NORMED)
-    h, w, _ = tmp.shape
-    y, x = np.unravel_index(np.argmax(result), result.shape)
-
-    # Get the bounding box where the score of the note type is
-    tl_x, tl_y = x+w+20, y-6+tolerance[0]
-    br_x, br_y = x+int(w*ratio), y+h+tolerance[1]
-
-    # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
-
-    # Read the score of the note type from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-    noteScores[type] = data.strip()
+# Converts a string to a song info object
+def strToSongInfo(song: str):
+  songInfo = SongInfo()
+  lines = song.splitlines()
+  # Get song name and difficulty
+  songName, difficulty = lines[0].split(') ', 1)[1], lines[0].split(') ', 1)[0][1:]
+  songInfo.songName =  songName
+  if not difficulty in difficulties:
+    return None, f"Invalid difficulty: {difficulty}. Must be in one of {difficulties}"
+  songInfo.difficulty = difficulty
+  # Get rank
+  rank = lines[1].split(': ', 1)[1]
+  if not rank in ranks:
+    return None, f"Invalid rank: {rank}. Must be in one of {ranks}"
+  songInfo.rank = rank
+  # Get score
+  score = lines[2].split(': ')[1]
+  songInfo.score = int(score) if score.isdecimal() else -1
+  # Get high score
+  highScore = lines[3].split(': ')[1]
+  songInfo.highScore = int(highScore) if highScore.isdecimal() else -1
+  # Get max combo
+  maxCombo = lines[4].split(': ')[1]
+  songInfo.maxCombo = int(maxCombo) if maxCombo.isdecimal() else -1
+  # Get note scores
+  notes = {}
+  for i in range(6, len(lines)):
+    note = lines[i].split(': ')[0][2:]
+    if note not in types:
+      return None, f"Invalid note type: {note}. Must be in one of {types}"
+    score = lines[i].split(': ')[1]
+    notes[note] = int(score) if score.isdecimal() else -1
   
-  # Return the note type scores in a map
-  return noteScores
+  # If any of the note types are missing, throw error
+  if not all(note in notes for note in types):
+    return None, f"Missing note types. Must have all of {types}"
+  songInfo.notes = notes
+
+  return songInfo, None
 
 
-# Function to get the score and high score of the image result
-def getScore(image, mode='cropped'):
-  # Get the location of the line separator
-  template = fetchScoreIcon(mode)
-  result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-  h, w, _ = template.shape
-  y, x = np.unravel_index(np.argmax(result), result.shape)
+# Confirm the song info and allow the user to edit the info if incorrect
+async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo):
+  # Send template for user to edit
+  await ctx.send('Does this not look correct? Edit the song by copying the next message and sending it back:')
+  await ctx.send(f'```{songInfoToStr(oldSong)}```')
 
-  # Use location of line separator to get the bounding box of the score
-  tl_x, tl_y = x+w+5, y-10
-  br_x, br_y = x+w+650, y+h+60
+  # New song to return
+  newSong = None
 
-  # Make image black and white for OCR
-  image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
+  # Wait for user to send edited song
+  def check(m):
+    return m.author == ctx.author and m.channel == ctx.channel
+  try:
+    ns = None
+    while ns is None:
+      # Get the message from the user and store it in song info
+      msg = await bot.wait_for('message', check=check, timeout=180.0)
+      ns, error = strToSongInfo(msg.content)
+      if error:
+        await ctx.send(error)
 
-  # Read the score text from the image
-  ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-  data = pytesseract.image_to_string(ROI)
-  lines = data.strip().splitlines()
+    # Give user a double check prompt before deciding whether to save
+    reply_msg = await ctx.send(f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```')
+    await reply_msg.add_reaction('✅')
+    await reply_msg.add_reaction('❌')
 
-  if len(lines) == 0:
-    return (-1,-1)
-  
-  # Get the score and high score
-  score = lines[0].split(" ")[-1].strip()
-  highScore = lines[1].split(" ")[-1].strip() if len(lines) > 1 else "0"
+    def check(reaction, user):
+      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
 
-  # Return integer values of the scores, defaulting to 0 if the score is not a number
-  return (int(score) if score.isdecimal() else 0, int(highScore) if highScore.isdecimal() else 0)
+    # Wait for user to react
+    try:
+      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+      await ctx.send('Timed out')
+    else:
+      # If user confirms, save new song and return
+      if str(reaction.emoji) == '✅':
+        newSong = ns
+        pass
+      # If user cancels, return nothing
+      elif str(reaction.emoji) == '❌':
+        # Ignore
+        await ctx.send('Ignoring this song')
+        pass
+  except asyncio.TimeoutError:
+    await ctx.send('Timed out.')
+  else:
+    await ctx.send('Thanks for the confirmation!')
 
-# Function to get the song and difficulty level of the image result
-def getSong(image, mode='cropped'):
-  templates = fetchDifficulties(mode)
-
-  # Try all the ranks and get the best match
-  results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), difficulty) for template, difficulty in templates]
-  # Get the result and difficulty of the best match
-  result, difficulty = max(results, key=lambda x: x[0].max())
-
-  # Get the location of the difficulty
-  h, w, _ = templates[0][0].shape
-  y, x = np.unravel_index(np.argmax(result), result.shape)
-
-  # Make a bounding box right of the difficulty for the song name
-  tl_x, tl_y = x+w, y
-  br_x, br_y = x+w+750, y+h
-
-  # Make image black and white for OCR
-  image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
-
-  # Read the song name from the image
-  ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-  data = pytesseract.image_to_string(ROI, config='--psm 6')
-
-  # Return the song name and difficulty
-  return (data.strip(), difficulty)
-
-
-# Function to get the max combo of the image result
-def getMaxCombo(image, mode='cropped'):
-  # Get the location of the max combo text
-  template = fetchMaxCombo(mode)
-  result = cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
-
-  # USe the location of the max combo text to create bounding box for the max combo score
-  h, w, _ = template.shape
-  y, x = np.unravel_index(np.argmax(result), result.shape)
-  tl_x, tl_y = x+5, y+h+10
-  br_x, br_y = x+w-5, y+h+65
-
-  # Make image black and white for OCR
-  image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
-
-  # Read the max combo score from the image
-  ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-  data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-  data = data.strip()
-
-  # Return the max combo score, defaulting to 0 if the score is not a number
-  return int(data) if data.isdecimal() else 0
-
-
-# A basic string output from an image
-def basicOutput(image):
-  # Get the song name and difficulty
-  song, difficulty = getSong(image)
-  # Get the score rank
-  rank = getRank(image)
-  # Get the score and high score
-  score, highScore = getScore(image)
-  # Get the max combo
-  maxCombo = getMaxCombo(image)
-  # Get the note type scores
-  notes = getNotes(image)
-
-  # Return the results in a formatted string
-  return f"({difficulty}) {song}\nRank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}\n{notes}"
+  return newSong

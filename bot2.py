@@ -12,6 +12,8 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI, SongInfo
+from functions import songInfoToStr, confirmSongInfo
+from db import Database
 
 # Get token from .env
 load_dotenv()
@@ -24,84 +26,7 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 
 # Create API
 scoreAPI = ScoreAPI()
-
-# Confirm a song info object to a formatted string
-def songInfoToStr(song: SongInfo):
-  songStr = f"({song.difficulty}) {song.songName}\n"
-  songStr += f"Rank: {song.rank}\nScore: {song.score}\nHigh Score: {song.highScore}\nMax Combo: {song.maxCombo}\n"
-  songStr += f"Note scores:\n"
-  for key in song.notes:
-    songStr += f"- {key}: {song.notes[key] if len(song.notes[key]) > 0 else '?'}\n"
-  return songStr
-
-# Converts a string to a song info object
-def strToSongInfo(song: str):
-  songInfo = SongInfo()
-  lines = song.splitlines()
-  # Get song name and difficulty
-  songInfo.songName = lines[0].split(') ', 1)[1]
-  songInfo.difficulty = lines[0].split(') ', 1)[0][1:]
-  # Get rank
-  songInfo.rank = lines[1].split(': ')[1]
-  # Get score
-  songInfo.score = lines[2].split(': ')[1]
-  # Get high score
-  songInfo.highScore = lines[3].split(': ')[1]
-  # Get max combo
-  songInfo.maxCombo = lines[4].split(': ')[1]
-  # Get note scores
-  for i in range(6, len(lines)):
-    note = lines[i].split(': ')[0][2:]
-    score = lines[i].split(': ')[1]
-    songInfo.notes[note] = score
-  return songInfo
-
-# Confirm the song info and allow the user to edit the info if incorrect
-async def confirmSongInfo(ctx: commands.Context, oldSong: SongInfo):
-  # Send template for user to edit
-  await ctx.send('Does this not look correct? Edit the song by copying the next message and sending it back:')
-  await ctx.send(f'```{songInfoToStr(oldSong)}```')
-
-  # New song to return
-  newSong = None
-
-  # Wait for user to send edited song
-  def check(m):
-    return m.author == ctx.author and m.channel == ctx.channel
-  try:
-    # Get the message from the user and store it in song info
-    msg = await bot.wait_for('message', check=check, timeout=60.0)
-    ns = strToSongInfo(msg.content)
-
-    # Give user a double check prompt before deciding whether to save
-    reply_msg = await ctx.send(f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```')
-    await reply_msg.add_reaction('✅')
-    await reply_msg.add_reaction('❌')
-
-    def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
-
-    # Wait for user to react
-    try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
-    except asyncio.TimeoutError:
-      await ctx.send('Timed out')
-    else:
-      # If user confirms, save new song and return
-      if str(reaction.emoji) == '✅':
-        newSong = ns
-        pass
-      # If user cancels, return nothing
-      elif str(reaction.emoji) == '❌':
-        # Ignore
-        await ctx.send('Ignoring this song')
-        pass
-  except:
-    await ctx.send('Timed out.')
-  else:
-    await ctx.send('Thanks for the confirmation!')
-
-  return newSong
+db = Database()
 
 @bot.command()
 async def newScore(ctx: commands.Context):
@@ -110,10 +35,10 @@ async def newScore(ctx: commands.Context):
   # Get all the attachments
   files = ctx.message.attachments
 
-  await ctx.send(f'Processing scores of {len(files)} songs...')
+  await ctx.send(f'Processing scores of {len(files)} song(s)...')
 
   for x, file in enumerate(files):
-    await ctx.send(f'Song {x+1}/{len(files)}')
+    await ctx.send(f'Starting song {x+1}/{len(files)}...')
     # Get the file
     fp = BytesIO()
     await file.save(fp)
@@ -126,14 +51,22 @@ async def newScore(ctx: commands.Context):
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
-    message = await ctx.send(f"Song {x+1}/{len(files)}\n```{songInfoToStr(output)}```", file=discord.File(fp, filename=file.filename, spoiler=file.is_spoiler()))
+
+    msgText = f'Song {x+1}/{len(files)}:\n'
+    msgText += f'```{songInfoToStr(output)}```\n'
+    msgText += 'React with ✅ to save the song to the database\n'
+    msgText += 'React with ☑️ to add a tag to the song before saving\n'
+    msgText += 'React with 📝 to edit the song info\n'
+    msgText += 'React with ❌ to discard the song\n'
+    message = await ctx.send(msgText, file=discord.File(fp, filename=file.filename, spoiler=file.is_spoiler()))
 
     await message.add_reaction('✅')
-    await message.add_reaction('❓')
+    await message.add_reaction('☑️')
+    await message.add_reaction('📝')
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❓', '❌']
+      return user == ctx.author and str(reaction.emoji) in ['✅', '☑️', '📝', '❌']
 
     # Wait for user to react
     try:
@@ -143,11 +76,14 @@ async def newScore(ctx: commands.Context):
     else:
       if str(reaction.emoji) == '✅':
         # Add to database
+        pass
+      elif str(reaction.emoji) == '☑️':
+        # Add tag
         await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database')
         pass
-      elif str(reaction.emoji) == '❓':
+      elif str(reaction.emoji) == '📝':
         # Have user confirm song info
-        output = await confirmSongInfo(ctx, output)
+        output = await confirmSongInfo(bot, ctx, output)
         pass
       elif str(reaction.emoji) == '❌':
         # Ignore
@@ -155,8 +91,27 @@ async def newScore(ctx: commands.Context):
         await ctx.send('Ignoring')
         pass
 
+    if not output is None:
+      db.create_song(str(user.id), output)
+      await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database')
     print(output)
 
-  await ctx.send(f'Done processing scores of {len(files)} songs!')
+  await ctx.send(f'Done processing scores of {len(files)} song(s)!')
+
+
+@bot.command()
+async def getScores(ctx: commands.Context, *, query: str):
+  user = ctx.message.author
+  if not query:
+    scores = db.get_songs(str(user.id))
+  else:
+    scores = db.get_scores_of_song(str(user.id), query)
+
+  if len(scores) == 0:
+    await ctx.send(f'No scores found for {query}')
+    return
+  await ctx.send(f'Found {len(scores)} score(s) for {query}')
+  for score in scores:
+    await ctx.send(f"```{songInfoToStr(SongInfo().fromDict(score))}```id: `{score.get('_id', '')}`")
 
 bot.run(TOKEN)

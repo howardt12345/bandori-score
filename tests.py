@@ -5,7 +5,7 @@ os.environ["OPENCV_LOG_LEVEL"]="SILENT"
 import cv2
 import glob
 from api import *
-
+from functions import *
 
 # Test on directory of images
 def testDir(path):
@@ -22,13 +22,16 @@ def testImage(path):
   mode = 'cropped'
 
   image = cv2.imread(path)
+  
+  scoreAPI = ScoreAPI()
+  song = scoreAPI.getSongInfo(image)
 
   print("---")
-  songName, difficulty = getSong(image, mode)
-  rank = getRank(image, mode)
-  score, highScore = getScore(image, mode)
-  maxCombo = getMaxCombo(image, mode)
-  notes = getNotes(image, mode)
+  songName, difficulty = song.getSong(image, mode)
+  rank = song.getRank(image, mode)
+  score, highScore = song.getScore(image, mode)
+  maxCombo = song.getMaxCombo(image, mode)
+  notes = song.getNotes(image, mode)
   print(f"{songName} - {difficulty}")
   print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
   print(notes)
@@ -41,7 +44,7 @@ def testImage2(path):
   scoreAPI = ScoreAPI()
 
   print("---")
-  print(scoreAPI.getSongInfo(image))
+  print(scoreAPI.getSongInfo(image).toJSON())
 
 # testDir('live')
 testImage('testdata/test.jpg')
