@@ -52,7 +52,7 @@ class ScoreAPI:
 
       # Draw the rectangle of the bounding box if draw is enabled
       if self.draw:
-        cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
+        cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
       # Make image black and white for OCR
       image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -79,7 +79,7 @@ class ScoreAPI:
 
     # Draw the rectangle of the bounding box if draw is enabled
     if self.draw:
-      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
+      cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -118,7 +118,7 @@ class ScoreAPI:
 
     # Draw the rectangle of the bounding box if draw is enabled
     if self.draw:
-      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
+      cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -144,7 +144,7 @@ class ScoreAPI:
 
     # Draw the rectangle of the bounding box if draw is enabled
     if self.draw:
-      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
+      cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

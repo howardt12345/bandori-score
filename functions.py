@@ -60,8 +60,6 @@ def fetchRanks(path):
 # Returns the name of the note type as well as variables for OCR ROI positioning
 def fetchNoteTypes(path):
   # List of note types and variables for OCR matching
-  ratios = [2.1, 2.75, 2.8, 4.3, 3.8]
-  tolerances = [(0, 0), (1, 0), (0, 0), (0, 3), (2, 5)] # The top and bottom tolerances of the note type bounding box
   imgs = []
   for i in range(len(types)):
     ext = "png" if path == 'direct' else "jpg"
@@ -194,7 +192,33 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
   else:
     await ctx.send('Thanks for the confirmation!')
 
-  return newSong
+  # Ask if user wants to tag the song
+  wantTag = False
+  if newSong:
+    reply_msg = await ctx.send(f'Do you want to tag this song?')
+    await reply_msg.add_reaction('✅')
+    await reply_msg.add_reaction('❌')
+
+    def check(reaction, user):
+      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+
+    # Wait for user to react
+    try:
+      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+      await ctx.send('Timed out')
+    else:
+      # If user confirms, save new song and return
+      if str(reaction.emoji) == '✅':
+        wantTag = True
+        pass
+      # If user cancels, return nothing
+      elif str(reaction.emoji) == '❌':
+        # Ignore
+        await ctx.send('Using default tag')
+        pass
+
+  return newSong, wantTag
 
 async def promptTag(bot: commands.Bot, ctx: commands.Context):
   # Send template for user to edit
