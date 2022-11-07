@@ -4,12 +4,13 @@ import cv2
 import pytesseract
 
 from functions import SongInfo, fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
-
+from consts import ranks
 
 # ScoreAPI class so that templates only need to be initialized once
 class ScoreAPI:
-  def __init__(self,  mode='cropped'):
+  def __init__(self,  mode='cropped', draw=False):
     self.mode = mode
+    self.draw = draw
     self.templates = {
       'ranks': fetchRanks(mode),
       'noteTypes': fetchNoteTypes(mode),
@@ -23,7 +24,13 @@ class ScoreAPI:
     # Try all the ranks and get the best match
     results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), rank) for template, rank in self.templates['ranks']]
     # Get the rank of the best match
-    _, rank = max(results, key=lambda x: x[0].max())
+    result, rank = max(results, key=lambda x: x[0].max())
+
+    # Draw the rectangle of the bounding box if draw is enabled
+    if self.draw:
+      h, w, _ = self.templates['ranks'][ranks.index(rank)][0].shape
+      y, x = np.unravel_index(np.argmax(result), result.shape)
+      cv2.rectangle(image, (x, y), (x+w, y+h), (0, 0, 255), 1)
 
     return rank
 
@@ -42,6 +49,10 @@ class ScoreAPI:
       # Get the bounding box where the score of the note type is
       tl_x, tl_y = x+w+20, y-6+tolerance[0]
       br_x, br_y = x+int(w*ratio), y+h+tolerance[1]
+
+      # Draw the rectangle of the bounding box if draw is enabled
+      if self.draw:
+        cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
 
       # Make image black and white for OCR
       image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -64,7 +75,11 @@ class ScoreAPI:
 
     # Use location of line separator to get the bounding box of the score
     tl_x, tl_y = x+w+5, y-10
-    br_x, br_y = x+w+650, y+h+60
+    br_x, br_y = x+w+625, y+h+60
+
+    # Draw the rectangle of the bounding box if draw is enabled
+    if self.draw:
+      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -101,6 +116,10 @@ class ScoreAPI:
     tl_x, tl_y = x+w+10, y
     br_x, br_y = x+w+750, y+h
 
+    # Draw the rectangle of the bounding box if draw is enabled
+    if self.draw:
+      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
+
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
@@ -122,6 +141,10 @@ class ScoreAPI:
     # Get the bounding box where the max combo is
     tl_x, tl_y = x+5, y+h+10
     br_x, br_y = x+w-5, y+h+65
+
+    # Draw the rectangle of the bounding box if draw is enabled
+    if self.draw:
+      cv2.rectangle(image, (tl_x, tl_y), (br_x, br_y), (0, 0, 255), 1)
 
     # Make image black and white for OCR
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
