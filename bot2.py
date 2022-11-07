@@ -96,14 +96,14 @@ async def newScore(ctx: commands.Context):
 
     if not output is None:
       db.create_song(str(user.id), output, tag)
-      await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database')
+      await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`')
     print(output)
 
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
 
 
 @bot.command()
-async def getScores(ctx: commands.Context, *, query: str):
+async def getScore(ctx: commands.Context, *, query: str):
   user = ctx.message.author
   if not query:
     scores = db.get_songs(str(user.id))
@@ -111,11 +111,11 @@ async def getScores(ctx: commands.Context, *, query: str):
     scores = db.get_scores_of_song(str(user.id), query)
 
   if len(scores) == 0:
-    await ctx.send(f'No scores found for {query}')
+    await ctx.send(f'No scores found for "{query}"')
     return
-  await ctx.send(f'Found {len(scores)} score(s) for {query}')
+  await ctx.send(f'Found {len(scores)} score(s) for "{query}"')
   for score in scores:
-    await ctx.send(f"```{songInfoToStr(SongInfo().fromDict(score))}```id: `{score.get('_id', '')}`\ntag: `{score.get('tag', '')}`")
+    await ctx.send(db.songInfoMsg(score))
 
 
 @bot.command()
@@ -125,7 +125,7 @@ async def deleteScore(ctx: commands.Context, id: str):
   # Fetch song info of id
   score = db.get_song(str(user.id), id)
   msgText = 'Are you sure you want to delete this score?\n'
-  msgText += f"```{songInfoToStr(SongInfo().fromDict(score))}```"
+  msgText += db.songInfoMsg(score)
   msgText += 'React with ✅ to confirm deletion\n'
   msgText += 'React with ❌ to cancel deletion\n'
 

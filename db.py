@@ -54,3 +54,12 @@ class Database:
 
   def log(self, userId: str, message: str):
     self.db[userId]['log'].insert_one({"message": message})
+
+
+  @staticmethod
+  def songInfoMsg(song: dict):
+    msg = ''
+    msg += f"id: `{song.get('_id', '')}`\n"
+    msg += f"tag: `{song.get('tag', '')}`\n"
+    msg += f"```{songInfoToStr(SongInfo().fromDict(song))}```"
+    return msg
