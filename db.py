@@ -36,7 +36,7 @@ class Database:
     return song
 
   def get_scores_of_song(self, userId: str, songName: str):
-    scores = self.db[userId]['songs'].find({'songName': re.compile('^' + songName + '$', re.IGNORECASE)})
+    scores = self.db[userId]['songs'].find({'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)})
     return list(scores)
 
   def update_song(self, userId: str, songId: int, song: SongInfo):
