@@ -1,11 +1,10 @@
 
 import numpy as np
 import cv2
-import pytesseract
-import json
 from discord.ext import commands
 import asyncio
 from consts import *
+import json
 
 class SongInfo:
   def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo=-1, notes={}):
@@ -45,7 +44,6 @@ class SongInfo:
   def fromJSON(json):
     return SongInfo.fromDict(json.loads(json))
 
-
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
   # List of ranks
@@ -57,7 +55,6 @@ def fetchRanks(path):
     if not template is None:
       imgs.append(( template, rank ))
   return imgs
-
 
 # Function to fetch the templates for the different note types
 # Returns the name of the note type as well as variables for OCR ROI positioning
@@ -74,7 +71,6 @@ def fetchNoteTypes(path):
       imgs.append(( template, types[i], ratios[i], tolerances[i] ))
   return imgs
 
-
 # Function to fetch the templates for the different difficulties
 # This will not work with 'direct' mode
 def fetchDifficulties(path):
@@ -87,18 +83,15 @@ def fetchDifficulties(path):
       imgs.append(( template, difficulty ))
   return imgs
 
-
 # Fetch score icon
 def fetchScoreIcon(path):
   ext = "png" if path == 'direct' else "jpg"
   return cv2.imread(f'assets/{path}/ScoreIcon.{ext}')
 
-
 # Fetch Max combo reference image
 def fetchMaxCombo(path):
   ext = "png" if path == 'direct' else "jpg"
   return cv2.imread(f'assets/{path}/Max combo.{ext}')
-
 
 # Confirm a song info object to a formatted string
 def songInfoToStr(song: SongInfo):
@@ -152,7 +145,6 @@ def strToSongInfo(song: str):
 
   return songInfo, None
 
-
 # Confirm the song info and allow the user to edit the info if incorrect
 async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo):
   # Send template for user to edit
@@ -203,3 +195,29 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
     await ctx.send('Thanks for the confirmation!')
 
   return newSong
+
+async def promptTag(bot: commands.Bot, ctx: commands.Context):
+  # Send template for user to edit
+  msgText = ''
+  for x, tag in enumerate(tags):
+    msgText += f'React with {tagIcons[x]} to tag this song with `{tag}`\n'
+
+  # Send message
+  reply_msg = await ctx.send(msgText)
+  for tagIcon in tagIcons:
+    await reply_msg.add_reaction(tagIcon)
+  # New song to return
+  tag = None
+
+  # Wait for user to send edited song
+  def check(reaction, user):
+    return user == ctx.author and str(reaction.emoji) in tagIcons
+  try:
+    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    tag = tags[tagIcons.index(reaction.emoji)]
+  except asyncio.TimeoutError:
+    await ctx.send('Timed out.')
+  else:
+    await ctx.send('Thanks for the confirmation!')
+
+  return tag
