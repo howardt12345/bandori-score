@@ -7,8 +7,8 @@ import glob
 from api import *
 from functions import *
 
-# Test on directory of images
 def testDir(path):
+  '''Test on a directory of images'''
   images = [cv2.imread(image) for image in glob.glob(f"testdata/{path}/*.jpg")]
 
   scoreAPI = ScoreAPI()
@@ -17,8 +17,8 @@ def testDir(path):
     print("---")
     print(scoreAPI.basicOutput(image))
 
-# Test on single image
 def testImage(path):
+  '''Test on a single image'''
   image = cv2.imread(path)
 
   scoreAPI = ScoreAPI()

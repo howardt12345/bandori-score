@@ -6,8 +6,8 @@ import pytesseract
 from functions import SongInfo, fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
 from consts import ranks
 
-# ScoreAPI class so that templates only need to be initialized once
 class ScoreAPI:
+  '''ScoreAPI class so that templates only need to be initialized once'''
   def __init__(self,  mode='cropped', draw=False):
     self.mode = mode
     self.draw = draw
@@ -19,8 +19,8 @@ class ScoreAPI:
       'maxCombo': fetchMaxCombo(mode)
     }
 
-  # Function to get the rank of the image result
   def getRank(self, image):
+    '''Gets the rank of the image result'''
     # Try all the ranks and get the best match
     results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), rank) for template, rank in self.templates['ranks']]
     # Get the rank of the best match
@@ -34,8 +34,8 @@ class ScoreAPI:
 
     return rank
 
-  # Function to get the different note counts of the image result
   def getNotes(self, image):
+    '''Gets the different note counts of the image result'''
     noteScores = {}
 
     for template in self.templates['noteTypes']:
@@ -66,8 +66,8 @@ class ScoreAPI:
     # Return the note type scores in a map
     return noteScores
 
-  # Function to get the score and high score of the image result
   def getScore(self, image):
+    '''Gets the score and high score of the image result'''
     # Get the location of the score icon
     result = cv2.matchTemplate(image, self.templates['scoreIcon'], cv2.TM_CCOEFF_NORMED)
     h, w, _ = self.templates['scoreIcon'].shape
@@ -101,8 +101,8 @@ class ScoreAPI:
     # Return integer values of the scores, defaulting to 0 if the score is not a number
     return (int(score) if score.isdecimal() else 0, int(highScore) if highScore.isdecimal() else 0)
 
-  # Function to get the song and difficulty level of the image result
   def getSong(self, image):
+    '''Gets the song and difficulty level of the image result'''
     # Try all the ranks and get the best match
     results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), difficulty) for template, difficulty in self.templates['difficulties']]
     # Get the result and difficulty of the best match
@@ -131,8 +131,8 @@ class ScoreAPI:
     # Return the song name and difficulty
     return (data.strip(), difficulty)
 
-  # Function to get the max combo of the image result
   def getMaxCombo(self, image):
+    '''Gets the max combo of the image result'''
     # Get the location of the max combo icon
     result = cv2.matchTemplate(image, self.templates['maxCombo'], cv2.TM_CCOEFF_NORMED)
     h, w, _ = self.templates['maxCombo'].shape
@@ -159,21 +159,23 @@ class ScoreAPI:
     return int(data) if data.isdecimal() else 0
 
   def getSongInfo(self, image):
-      # Get the song name and difficulty
-      song, difficulty = self.getSong(image)
-      # Get the score rank
-      rank = self.getRank(image)
-      # Get the score and high score
-      score, highScore = self.getScore(image)
-      # Get the max combo
-      maxCombo = self.getMaxCombo(image)
-      # Get the note type scores
-      notes = self.getNotes(image)
+    '''Gets the song information from an image'''
+    # Get the song name and difficulty
+    song, difficulty = self.getSong(image)
+    # Get the score rank
+    rank = self.getRank(image)
+    # Get the score and high score
+    score, highScore = self.getScore(image)
+    # Get the max combo
+    maxCombo = self.getMaxCombo(image)
+    # Get the note type scores
+    notes = self.getNotes(image)
 
-      songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes)
-      return songInfo
+    songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes)
+    return songInfo
 
   def basicOutput(self, image):
+    '''Returns the result of the song information in a basic format'''
     # Get the song name and difficulty
     song, difficulty = self.getSong(image)
     # Get the score rank
@@ -189,6 +191,7 @@ class ScoreAPI:
     return f"({difficulty}) {song}\nRank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}\n{notes}"
 
   def jsonOutput(self, image):
+    '''Returns the result of the song information in a json format'''
     # Get the song name and difficulty
     song, difficulty = self.getSong(image)
     # Get the score rank

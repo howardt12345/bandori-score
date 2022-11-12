@@ -7,6 +7,7 @@ from consts import *
 import json
 
 class SongInfo:
+  '''Object representing a song's info'''
   def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo=-1, notes={}):
     self.songName = songName
     self.difficulty = difficulty
@@ -45,16 +46,18 @@ class SongInfo:
     return SongInfo.fromDict(json.loads(json))
 
   def totalNotes(self):
+    '''Returns the total number of notes in the song'''
     return sum(self.notes.values())
 
   def calculateTP(self):
+    '''Calculates the total percentage of the song based on note weighting'''
     tp = 0
     for noteType in self.notes:
       tp += self.notes[noteType] * noteWeights[noteType]
     return tp / self.totalNotes()
 
-# Function to fetch the templates for the different ranks
 def fetchRanks(path):
+  '''Fetches the templates of the different ranks'''
   # List of ranks
   imgs = []
   for rank in ranks:
@@ -65,9 +68,9 @@ def fetchRanks(path):
       imgs.append(( template, rank ))
   return imgs
 
-# Function to fetch the templates for the different note types
-# Returns the name of the note type as well as variables for OCR ROI positioning
 def fetchNoteTypes(path):
+  '''Fetches the templates for the different note types
+  \nReturns the name of the note type as well as variables for OCR ROI positioning'''
   # List of note types and variables for OCR matching
   imgs = []
   for x, type in enumerate(types):
@@ -78,9 +81,9 @@ def fetchNoteTypes(path):
       imgs.append(( template, type, ratios[x], tolerances[x] ))
   return imgs
 
-# Function to fetch the templates for the different difficulties
-# This will not work with 'direct' mode
 def fetchDifficulties(path):
+  '''Fetches the templates for the different difficulties
+  \nThis will not work with the 'direct' path assets'''
   imgs = []
   for difficulty in difficulties:
     ext = "png" if path == 'direct' else "jpg"
@@ -90,18 +93,18 @@ def fetchDifficulties(path):
       imgs.append(( template, difficulty ))
   return imgs
 
-# Fetch score icon
 def fetchScoreIcon(path):
+  '''Fetches the score icon'''
   ext = "png" if path == 'direct' else "jpg"
   return cv2.imread(f'assets/{path}/ScoreIcon.{ext}')
 
-# Fetch Max combo reference image
 def fetchMaxCombo(path):
+  '''Fetches the max combo template'''
   ext = "png" if path == 'direct' else "jpg"
   return cv2.imread(f'assets/{path}/Max combo.{ext}')
 
-# Confirm a song info object to a formatted string
 def songInfoToStr(song: SongInfo):
+  '''Converts a SongInfo object to a formatted string'''
   songStr = f"({song.difficulty}) {song.songName}\n"
   songStr += f"Rank: {song.rank}\n"
   songStr += f"Score: {song.score if song.score >= 0 else '?'}\n"
@@ -112,8 +115,8 @@ def songInfoToStr(song: SongInfo):
     songStr += f"- {key}: {song.notes[key] if song.notes[key] >= 0 else '?'}\n"
   return songStr
 
-# Converts a string to a song info object
 def strToSongInfo(song: str):
+  '''Converts a formatted string to a SongInfo object'''
   songInfo = SongInfo()
   lines = song.splitlines()
   # Get song name and difficulty
@@ -152,8 +155,8 @@ def strToSongInfo(song: str):
 
   return songInfo, None
 
-# Confirm the song info and allow the user to edit the info if incorrect
 async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo):
+  '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   await ctx.send('Does this not look correct? Edit the song by copying the next message and sending it back:')
   await ctx.send(f'```{songInfoToStr(oldSong)}```')
@@ -230,6 +233,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
   return newSong, wantTag
 
 async def promptTag(bot: commands.Bot, ctx: commands.Context):
+  '''Prompt the user to tag the song'''
   # Send template for user to edit
   msgText = ''
   for x, tag in enumerate(tags):
