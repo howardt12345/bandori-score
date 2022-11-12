@@ -1,11 +1,10 @@
 
 import datetime
-from pymongo import MongoClient, DESCENDING, TEXT, errors
+from pymongo import MongoClient, ASCENDING, DESCENDING, TEXT, errors
 from dotenv import load_dotenv
 import os
 import re
 from bson.objectid import ObjectId
-
 
 from api import SongInfo
 from functions import songInfoToStr
@@ -17,6 +16,7 @@ class Database:
     self.db = self.client[os.getenv('DB_NAME')]
     print("Connected to the MongoDB database!")
 
+
   def create_song(self, userId: str, song: SongInfo, tag: str):
     self.db[userId]['songs'].create_index([
       ('songName', TEXT), 
@@ -27,10 +27,10 @@ class Database:
       ('highScore', DESCENDING),
       ('maxCombo', DESCENDING),
       ('notes.Perfect', DESCENDING),
-      ('notes.Great', DESCENDING),
-      ('notes.Good', DESCENDING),
-      ('notes.Bad', DESCENDING),
-      ('notes.Miss', DESCENDING),
+      ('notes.Great', ASCENDING),
+      ('notes.Good', ASCENDING),
+      ('notes.Bad', ASCENDING),
+      ('notes.Miss', ASCENDING),
     ], unique=True)
 
     songDict = song.toDict()
@@ -41,25 +41,33 @@ class Database:
       created_song = self.db[userId]['songs'].find_one(
         {"_id": new_song.inserted_id}
       )
-      self.log(userId, created_song.get('_id', ''), f"User {userId} created: \n{song}")
+      self.log(userId, f"POST: User {userId} created: \n{song}", songId=created_song.get('_id', ''))
       return created_song
     except errors.DuplicateKeyError:
+      self.log(userId, f"POST: User {userId} tried to create a duplicate song: \n{song}")
       return -1
     except Exception as e:
-      print(e)
+      self.log(userId, f"POST: User {userId} tried to create a song but failed: \n{song}")
       return None
+
 
   def get_songs(self, userId: str):
     songs = self.db[userId]['songs'].find()
+    self.log(userId, f"GET: User {userId} got all songs")
     return list(songs)
 
+
   def get_song(self, userId: str, songId: str):
-    song = self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
+    song = self.db[userId]['songs'].find_one({'_id': ObjectId(songId)})
+    self.log(userId, f"GET: User {userId} got song with ID {songId}")
     return song
+
 
   def get_scores_of_song(self, userId: str, songName: str):
     scores = self.db[userId]['songs'].find({'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)})
+    self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
     return list(scores)
+
 
   def update_song(self, userId: str, songId: int, song: SongInfo):
     self.db[userId]['songs'].update_one(
@@ -68,10 +76,12 @@ class Database:
     )
 
     updated_song = self.db[userId]['songs'].find_one({"_id": songId})
+    self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
     return updated_song
 
   def delete_song(self, userId: str, songId: str):
     self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
+    self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}")
 
 
   def log(self, userId: str, message: str, songId: str = ""):
