@@ -1,5 +1,6 @@
 
-from pymongo import MongoClient
+import datetime
+from pymongo import MongoClient, DESCENDING, TEXT, errors
 from dotenv import load_dotenv
 import os
 import re
@@ -17,15 +18,36 @@ class Database:
     print("Connected to the MongoDB database!")
 
   def create_song(self, userId: str, song: SongInfo, tag: str):
+    self.db[userId]['songs'].create_index([
+      ('songName', TEXT), 
+      ('difficulty', TEXT), 
+      ('rank', TEXT), 
+      ('tag', TEXT),
+      ('score', DESCENDING), 
+      ('highScore', DESCENDING),
+      ('maxCombo', DESCENDING),
+      ('notes.Perfect', DESCENDING),
+      ('notes.Great', DESCENDING),
+      ('notes.Good', DESCENDING),
+      ('notes.Bad', DESCENDING),
+      ('notes.Miss', DESCENDING),
+    ], unique=True)
+
     songDict = song.toDict()
     songDict['tag'] = tag
 
-    new_song = self.db[userId]['songs'].insert_one(songDict)
-    created_song = self.db[userId]['songs'].find_one(
-      {"_id": new_song.inserted_id}
-    )
-
-    return created_song
+    try:
+      new_song = self.db[userId]['songs'].insert_one(songDict)
+      created_song = self.db[userId]['songs'].find_one(
+        {"_id": new_song.inserted_id}
+      )
+      self.log(userId, created_song.get('_id', ''), f"User {userId} created: \n{song}")
+      return created_song
+    except errors.DuplicateKeyError:
+      return -1
+    except Exception as e:
+      print(e)
+      return None
 
   def get_songs(self, userId: str):
     songs = self.db[userId]['songs'].find()
@@ -52,8 +74,14 @@ class Database:
     self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
 
 
-  def log(self, userId: str, message: str):
-    self.db[userId]['log'].insert_one({"message": message})
+  def log(self, userId: str, message: str, songId: str = ""):
+    self.db[userId]['log'].insert_one({
+      "message": message, 
+      "timestamp": datetime.datetime.now(),
+      "songId": songId,
+      "userId": userId
+    })
+    print(message)
 
 
   @staticmethod

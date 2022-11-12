@@ -97,9 +97,16 @@ async def newScore(ctx: commands.Context, defaultTag: str = ""):
         pass
 
     if not output is None:
-      db.create_song(str(user.id), output, tag)
-      await ctx.send(f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`')
-    print(output)
+      res = db.create_song(str(user.id), output, tag)
+      if res and res != -1:
+        id = res.get('_id', '')
+        msgText = f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`'
+        msgText += f'\nid: `{id}`'
+        await ctx.send(msgText)
+      elif res == -1:
+        await ctx.send('Song score already exists in database')
+      else:
+        await ctx.send('Error adding song to database')
 
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
 
