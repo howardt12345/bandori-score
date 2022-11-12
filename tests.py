@@ -19,33 +19,16 @@ def testDir(path):
 
 # Test on single image
 def testImage(path):
-  mode = 'cropped'
-
   image = cv2.imread(path)
-  
+
   scoreAPI = ScoreAPI()
   song = scoreAPI.getSongInfo(image)
 
   print("---")
-  songName, difficulty = song.getSong(image, mode)
-  rank = song.getRank(image, mode)
-  score, highScore = song.getScore(image, mode)
-  maxCombo = song.getMaxCombo(image, mode)
-  notes = song.getNotes(image, mode)
-  print(f"{songName} - {difficulty}")
-  print(f"Rank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}")
-  print(notes)
+  print(song.toJSON())  
+  print(song.totalNotes())
+  print(song.calculateTP())
 
-
-# Test on single image
-def testImage2(path):
-  image = cv2.imread(path)
-
-  scoreAPI = ScoreAPI()
-
-  print("---")
-  print(scoreAPI.getSongInfo(image).toJSON())
 
 # testDir('live')
-testImage('testdata/test.jpg')
-testImage2('testdata/test.jpg')
+testImage('testdata/test3.jpg')

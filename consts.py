@@ -5,3 +5,10 @@ tolerances = [(0, 0), (1, 0), (0, 0), (0, 3), (2, 5)] # The top and bottom toler
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
 tags = ['live', 'multilive', 'event']
 tagIcons = ['🎵', '🎤', '🎉']
+noteWeights = {
+  'Perfect': 1,
+  'Great': 0.75,
+  'Good': 0.5,
+  'Bad': 0.25,
+  'Miss': 0
+}

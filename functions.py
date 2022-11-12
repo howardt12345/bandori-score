@@ -44,6 +44,15 @@ class SongInfo:
   def fromJSON(json):
     return SongInfo.fromDict(json.loads(json))
 
+  def totalNotes(self):
+    return sum(self.notes.values())
+
+  def calculateTP(self):
+    tp = 0
+    for noteType in self.notes:
+      tp += self.notes[noteType] * noteWeights[noteType]
+    return tp / self.totalNotes()
+
 # Function to fetch the templates for the different ranks
 def fetchRanks(path):
   # List of ranks
@@ -61,12 +70,12 @@ def fetchRanks(path):
 def fetchNoteTypes(path):
   # List of note types and variables for OCR matching
   imgs = []
-  for i in range(len(types)):
+  for x, type in enumerate(types):
     ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'assets/{path}/score/{types[i]}.{ext}')
+    template = cv2.imread(f'assets/{path}/score/{type}.{ext}')
     if not template is None:
       # If the template exists, add it to the list
-      imgs.append(( template, types[i], ratios[i], tolerances[i] ))
+      imgs.append(( template, type, ratios[x], tolerances[x] ))
   return imgs
 
 # Function to fetch the templates for the different difficulties
