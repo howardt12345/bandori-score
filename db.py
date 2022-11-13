@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 
 from api import SongInfo
 from functions import songInfoToStr
-from consts import tags
+from consts import *
 
 class Database:
   def __init__(self):
@@ -74,12 +74,23 @@ class Database:
 
   def get_song_with_highest(self, userId: str, songName: str, difficulty: str, query: str):
     songs = self.db[userId]['songs'].find({
-      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
-      'difficulty': re.compile('^' + re.escape(difficulty) + '$', re.IGNORECASE),
+      "$text": {"$search": songName, "$caseSensitive": False},
+      "difficulty": difficulties.index(difficulty),
     }).sort(query, DESCENDING).limit(1)
     self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
     return list(songs)
 
+  def get_highest_songs(self, userId: str, songName: str, difficulty: str):
+    res = []
+    for category in allowedForHighest:
+      songs = self.db[userId]['songs'].find({
+        "$text": {"$search": songName, "$caseSensitive": False},
+        "difficulty": difficulties.index(difficulty),
+      }).sort(category, DESCENDING).limit(1)
+      res.extend(list(songs))
+
+    self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
+    return res
 
   def update_song(self, userId: str, songId: str, song: SongInfo):
     self.db[userId]['songs'].update_one(

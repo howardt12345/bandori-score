@@ -219,17 +219,18 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       await ctx.send('Cancelled manual input')
 
 
-async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str):
-  if not songName or difficulty not in difficulties or query not in allowedForHighest:
+async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str = ""):
+  if not songName or difficulty not in difficulties or (query and query not in allowedForHighest):
     await ctx.send(f'Invalid query: "{query}" for song {songName} and difficulty {difficulty}.\nQuery must be one of: {allowedForHighest}')
     return
   user = ctx.message.author
-  scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)
+  scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty) 
   if len(scores) == 0:
     await ctx.send(f'No highest {query} entry for "{songName}" ({difficulty})')
     return
   if isinstance(scores, dict):
-    scores = [scores]
-  await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
-  for score in scores:
-    await ctx.send(db.songInfoMsg(score))
+    await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
+    await ctx.send(db.songInfoMsg(scores))
+  elif isinstance(scores, list):
+    for x, category in enumerate(allowedForHighest):
+      await ctx.send(f'The highest {category} entry for "{songName}" ({difficulty}): \n{db.songInfoMsg(scores[x])}')
