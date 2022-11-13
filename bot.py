@@ -60,4 +60,9 @@ async def getHighest(ctx: commands.Context, songName: str = None, difficulty: st
   msgLog(ctx)
   await bot_commands.getHighest(db, ctx, songName, difficulty, tag, query)
 
+@bot.command()
+async def getSongCounts(ctx: commands.Context, difficulty: str = None, tag: str = ""):
+  msgLog(ctx)
+  await bot_commands.getSongCounts(db, ctx, difficulty, tag)
+
 bot.run(TOKEN)

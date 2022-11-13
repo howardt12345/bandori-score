@@ -65,8 +65,15 @@ class Database:
     return song
 
 
-  def get_scores_of_song(self, userId: str, songName: str):
-    scores = self.db[userId]['songs'].find({'songName': re.compile(re.escape(songName), re.IGNORECASE)}).sort('score', ASCENDING) 
+  def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = ""):
+    q = {
+      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
+    }
+    if difficulty and difficulty in difficulties:
+      q['difficulty'] = difficulties.index(difficulty)
+    if tag and tag in tags:
+      q['tag'] = tags.index(tag)
+    scores = self.db[userId]['songs'].find(q).sort('score', ASCENDING) 
     self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
     return list(scores)
 
@@ -113,6 +120,25 @@ class Database:
   def delete_song(self, userId: str, songId: str):
     self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
     self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}")
+
+
+  def get_song_counts(self, userId: str, difficulty: str, tag: str):
+    q = {}
+    if difficulty and difficulty in difficulties:
+      q['difficulty'] = difficulties.index(difficulty)
+    if tag and tag in tags:
+      q['tag'] = tags.index(tag)
+    song_counts = self.db[userId]['songs'].aggregate([
+      {"$match": q},
+      {
+        "$group": {
+          "_id": "$songName",
+          "count": {"$sum": 1}
+        }
+      },
+    ])
+    self.log(userId, f"GET: User {userId} got song counts")
+    return list(song_counts)
 
 
   def log(self, userId: str, message: str, songId: str = ""):

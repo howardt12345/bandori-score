@@ -253,3 +253,15 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
   elif isinstance(scores, list):
     for x, category in enumerate(highest):
       await ctx.send(f'The highest {category[1]} entry for "{songName}" ({difficulty}): \n{db.songInfoMsg(scores[x])}')
+
+
+async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = ""):
+  '''Gets the number of songs in the database'''
+  user = ctx.message.author
+  counts = db.get_song_counts(str(user.id), difficulty, tag)
+  counts.sort(key=lambda x: x['_id'].lower())
+  counts.sort(key=lambda x: x['count'], reverse=True)
+  msgText = f"You have the following number of{f'{difficulty} ' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''}:\n"
+  for count in counts:
+    msgText += f'`{count["_id"]}: {count["count"]}`\n'
+  await ctx.send(msgText)
