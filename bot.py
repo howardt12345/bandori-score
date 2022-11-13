@@ -15,6 +15,7 @@ from api import ScoreAPI
 from db import Database
 from consts import tags
 import bot_commands
+from bot_util_functions import msgLog
 
 # Get token from .env
 load_dotenv()
@@ -31,32 +32,32 @@ db = Database()
 
 @bot.command()
 async def newScores(ctx: commands.Context, compare: bool = True, defaultTag: str = ""):
-  print('---', ctx.message.author, ctx.message.content)
+  msgLog(ctx)
   await bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag)
 
 @bot.command()
 async def getScores(ctx: commands.Context, *, query: str = ""):
-  print('---', ctx.message.author, ctx.message.content)
+  msgLog(ctx)
   await bot_commands.getScores(db, ctx, query)
 
 @bot.command()
 async def editScore(ctx: commands.Context, id: str):
-  print('---', ctx.message.author, ctx.message.content)
+  msgLog(ctx)
   await bot_commands.editScore(bot, db, ctx, id)
 
 @bot.command()
 async def deleteScore(ctx: commands.Context, id: str):
-  print('---', ctx.message.author, ctx.message.content)
+  msgLog(ctx)
   await bot_commands.deleteScore(bot, db, ctx, id)
 
 @bot.command()
 async def manualInput(ctx: commands.Context, defaultTag: str = ""):
-  print('---', ctx.message.author, ctx.message.content)
+  msgLog(ctx)
   await bot_commands.manualInput(bot, db, ctx, defaultTag)
 
 @bot.command()
-async def getHighest(ctx: commands.Context, songName: str, difficulty: str, query: str = ""):
-  print('---', ctx.message.author, ctx.message.content)
+async def getHighest(ctx: commands.Context, songName: str = None, difficulty: str = None, query: str = ""):
+  msgLog(ctx)
   await bot_commands.getHighest(db, ctx, songName, difficulty, query)
 
 bot.run(TOKEN)

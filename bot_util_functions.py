@@ -8,6 +8,9 @@ from db import Database
 
 from functions import *
 
+def msgLog(ctx: commands.Context):
+  print(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
+
 async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit

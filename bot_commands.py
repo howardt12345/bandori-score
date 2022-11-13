@@ -232,7 +232,8 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
 
 async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str = ""):
   if not songName or difficulty not in difficulties or (query and query not in [x[0] for x in highest]):
-    await ctx.send(f'Invalid query: "{query}" for song {songName} and difficulty {difficulty}.\nQuery must be one of: {[x[0] for x in highest]}')
+    await ctx.send(f'''Invalid query: "{query}" for song {songName} and difficulty {difficulty}.
+    \nSong name and difficulty must be provided and Query must be one of: {[x[0] for x in highest]}''')
     return
   user = ctx.message.author
   scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty) 
