@@ -31,10 +31,12 @@ class Database:
       ('notes.Good', ASCENDING),
       ('notes.Bad', ASCENDING),
       ('notes.Miss', ASCENDING),
+      ('TP', DESCENDING),
     ], unique=True)
 
     songDict = song.toDict()
     songDict['tag'] = tag
+    songDict['TP'] = song.calculateTP()
 
     try:
       new_song = self.db[userId]['songs'].insert_one(songDict)
@@ -78,6 +80,7 @@ class Database:
     updated_song = self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
     self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
     return updated_song
+
 
   def delete_song(self, userId: str, songId: str):
     self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})

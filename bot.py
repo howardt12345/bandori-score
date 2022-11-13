@@ -49,4 +49,9 @@ async def deleteScore(ctx: commands.Context, id: str):
   print('---', ctx.message.author, ctx.message.content)
   await bot_commands.deleteScore(bot, db, ctx, id)
 
+@bot.command()
+async def manualInput(ctx: commands.Context, defaultTag: str = ""):
+  print('---', ctx.message.author, ctx.message.content)
+  await bot_commands.manualInput(bot, db, ctx, defaultTag)
+
 bot.run(TOKEN)

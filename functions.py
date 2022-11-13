@@ -154,3 +154,27 @@ def strToSongInfo(song: str):
   songInfo.notes = notes
 
   return songInfo, None
+
+def songTemplateFormat():
+  '''Returns a formatted string of the song template'''
+  songStr = f"({'|'.join(difficulties)}) song_name\n"
+  songStr += f"Rank: {'|'.join(ranks)}\n"
+  songStr += f"Score: score\n"
+  songStr += f"High Score: high_score\n"
+  songStr += f"Max Combo: max_combo\n"
+  songStr += f"Note scores:\n"
+  for key in types:
+    songStr += f"- {key}: {key.lower()}_count\n"
+  return songStr
+
+def emptyTemplate():
+  '''Returns an empty song template'''
+  songStr = f"({'|'.join(difficulties)}) \n"
+  songStr += f"Rank: {'|'.join(ranks)}\n"
+  songStr += f"Score: \n"
+  songStr += f"High Score: \n"
+  songStr += f"Max Combo: \n"
+  songStr += f"Note scores:\n"
+  for key in types:
+    songStr += f"- {key}: \n"
+  return songStr

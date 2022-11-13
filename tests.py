@@ -31,4 +31,5 @@ def testImage(path):
 
 
 # testDir('live')
-testImage('testdata/test3.jpg')
+# testImage('testdata/test3.jpg')
+print(emptyTemplate())

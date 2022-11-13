@@ -121,7 +121,8 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
     await ctx.send(db.songInfoMsg(score))
 
 
-async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str):  
+async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str):
+  '''Edits a score in the database given an id'''
   user = ctx.message.author
 
   # Fetch song info of id
@@ -171,3 +172,48 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
     elif str(reaction.emoji) == '❌':
       # Ignore
       await ctx.send('Cancelled deletion')
+
+
+async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, defaultTag: str = ""):
+  '''Manually input a song score'''
+  user = ctx.message.author
+
+  # Confirm if user really wants to manually input a song
+  msgText = '**This is an advanced feature.** Are you sure you want to manually input a song?\n'
+  msgText += 'React with ✅ to confirm\n'
+  msgText += 'React with ❌ to cancel\n'
+
+  message = await ctx.send(msgText)
+  await message.add_reaction('✅')
+  await message.add_reaction('❌')
+
+  def check(reaction, user):
+    return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+
+  # Wait for user to react
+  try:
+    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+  except asyncio.TimeoutError:
+    await ctx.send('Timed out')
+  else:
+    if str(reaction.emoji) == '✅':
+      # request song info
+      tag = defaultTag if defaultTag in tags else tags[0]
+
+      song, wantTag = await confirmSongInfo(bot, ctx, askTag=True)
+      if song:
+        if wantTag:
+          tag = await promptTag(bot, ctx)
+        res = db.create_song(str(user.id), song, tag)
+        if res and res != -1:
+          id = res.get('_id', '')
+          msgText = f'({song.difficulty}) {song.songName} with a score of {song.score} added to database with tag `{tag}`'
+          msgText += f'\nid: `{id}`'
+          await ctx.send(msgText)
+        elif res == -1:
+          await ctx.send('Song score already exists in database')
+        else:
+          await ctx.send('Error adding song to database')
+    elif str(reaction.emoji) == '❌':
+      # Ignore
+      await ctx.send('Cancelled manual input')    
