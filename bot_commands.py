@@ -12,7 +12,8 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songInfoToStr, confirmSongInfo, promptTag
+from functions import songInfoToStr
+from bot_util_functions import *
 from db import Database
 from consts import tags
 
@@ -73,7 +74,7 @@ async def newScores(scoreAPI: ScoreAPI, bot: commands.Bot, db: Database, ctx: co
         pass
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
-        output, wantTag = await confirmSongInfo(bot, ctx, output)
+        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True)
         if wantTag:
           tag = await promptTag(bot, ctx)
         pass
@@ -119,6 +120,24 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
   for score in scores:
     await ctx.send(db.songInfoMsg(score))
 
+
+async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str):  
+  user = ctx.message.author
+
+  # Fetch song info of id
+  score = db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
+
+
+  song = SongInfo.fromDict(score)
+  newSong, _ = await confirmSongInfo(bot, ctx, song)
+  if newSong:
+    # Update the song
+    db.update_song(str(user.id), id, newSong)
+  else:
+    await ctx.send('No changes made')
 
 async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str):
   '''Deletes a score from the database given an id'''

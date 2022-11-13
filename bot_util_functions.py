@@ -7,7 +7,7 @@ import json
 
 from functions import *
 
-async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo):
+async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo, askTag=False):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   await ctx.send('Does this not look correct? Edit the song by copying the next message and sending it back:')
@@ -58,7 +58,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
 
   # Ask if user wants to tag the song
   wantTag = False
-  if newSong:
+  if askTag and newSong:
     reply_msg = await ctx.send(f'Do you want to tag this song?')
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')

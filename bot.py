@@ -12,7 +12,6 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songInfoToStr, confirmSongInfo, promptTag
 from db import Database
 from consts import tags
 import bot_commands
@@ -39,6 +38,9 @@ async def newScores(ctx: commands.Context, defaultTag: str = ""):
 async def getScores(ctx: commands.Context, *, query: str = ""):
   await bot_commands.getScores(db, ctx, query)
 
+@bot.command()
+async def editScore(ctx: commands.Context, id: str):
+  await bot_commands.editScore(bot, db, ctx, id)
 
 @bot.command()
 async def deleteScore(ctx: commands.Context, id: str):

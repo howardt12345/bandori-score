@@ -69,13 +69,13 @@ class Database:
     return list(scores)
 
 
-  def update_song(self, userId: str, songId: int, song: SongInfo):
+  def update_song(self, userId: str, songId: str, song: SongInfo):
     self.db[userId]['songs'].update_one(
-      {"_id": songId},
+      {"_id": ObjectId(songId)},
       {"$set": song.toDict()}
     )
 
-    updated_song = self.db[userId]['songs'].find_one({"_id": songId})
+    updated_song = self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
     self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
     return updated_song
 
