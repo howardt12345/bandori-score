@@ -31,19 +31,22 @@ db = Database()
 
 @bot.command()
 async def newScores(ctx: commands.Context, defaultTag: str = ""):
+  print('---', ctx.message.author, ctx.message.content)
   await bot_commands.newScores(scoreAPI, bot, db, ctx, defaultTag)
-
 
 @bot.command()
 async def getScores(ctx: commands.Context, *, query: str = ""):
+  print('---', ctx.message.author, ctx.message.content)
   await bot_commands.getScores(db, ctx, query)
 
 @bot.command()
 async def editScore(ctx: commands.Context, id: str):
+  print('---', ctx.message.author, ctx.message.content)
   await bot_commands.editScore(bot, db, ctx, id)
 
 @bot.command()
 async def deleteScore(ctx: commands.Context, id: str):
+  print('---', ctx.message.author, ctx.message.content)
   await bot_commands.deleteScore(bot, db, ctx, id)
 
 bot.run(TOKEN)
