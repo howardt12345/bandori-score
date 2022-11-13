@@ -31,6 +31,8 @@ async def newScores(
   # Get all the attachments
   files = ctx.message.attachments
 
+  compareRes = None
+
   await ctx.send(f'Processing scores of {len(files)} song(s)...')
 
   for x, file in enumerate(files):
@@ -93,7 +95,7 @@ async def newScores(
 
     if not output is None:
       if compare:
-        compareRes = compareSongWithHighest(ctx, db, output.toDict())
+        compareRes = compareSongWithHighest(ctx, db, output.toDict(), tag)
       res = db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
@@ -105,9 +107,11 @@ async def newScores(
       else:
         await ctx.send('Error adding song to database')
 
+    if compareRes:
+      await printSongCompare(ctx, compareRes)
+
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
-  if compareRes:
-    await printSongCompare(ctx, compareRes)
+
 
 
 async def getScores(db: Database, ctx: commands.Context, query: str = ""):
@@ -148,6 +152,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
   if newSong:
     # Update the song
     db.update_song(str(user.id), id, newSong)
+    await ctx.send(f'Score with id `{id}` updated')
   else:
     await ctx.send('No changes made')
 
@@ -157,7 +162,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
 
   # Fetch song info of id
   score = db.get_song(str(user.id), id)
-  msgText = 'Are you sure you want to delete this score?\n'
+  msgText = 'Are you sure you want to delete this score?\n**THIS ACTION CANNOT BE UNDONE**\n'
   msgText += db.songInfoMsg(score)
   msgText += 'React with ✅ to confirm deletion\n'
   msgText += 'React with ❌ to cancel deletion\n'
@@ -230,13 +235,15 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       await ctx.send('Cancelled manual input')
 
 
-async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str = ""):
+async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, tag: str = "", query: str = ""):
+  '''Gets the highest score of a song given a song nam, difficulty, and tag'''
+
   if not songName or difficulty not in difficulties or (query and query not in [x[0] for x in highest]):
     await ctx.send(f'''Invalid query: "{query}" for song {songName} and difficulty {difficulty}.
-    \nSong name and difficulty must be provided and Query must be one of: {[x[0] for x in highest]}''')
+    \nSong name and difficulty must be provided and query must be one of: {[x[0] for x in highest]}''')
     return
   user = ctx.message.author
-  scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty) 
+  scores = db.get_song_with_highest(str(user.id), songName, difficulty, tag, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty, tag) 
   if len(scores) == 0:
     await ctx.send(f'No highest {query} entry for "{songName}" ({difficulty})')
     return

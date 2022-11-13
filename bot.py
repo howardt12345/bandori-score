@@ -31,7 +31,7 @@ scoreAPI = ScoreAPI(draw=True)
 db = Database()
 
 @bot.command()
-async def newScores(ctx: commands.Context, compare: bool = True, defaultTag: str = ""):
+async def newScores(ctx: commands.Context, defaultTag: str = "", compare: bool = True):
   msgLog(ctx)
   await bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag)
 
@@ -56,8 +56,8 @@ async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   await bot_commands.manualInput(bot, db, ctx, defaultTag)
 
 @bot.command()
-async def getHighest(ctx: commands.Context, songName: str = None, difficulty: str = None, query: str = ""):
+async def getHighest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
   msgLog(ctx)
-  await bot_commands.getHighest(db, ctx, songName, difficulty, query)
+  await bot_commands.getHighest(db, ctx, songName, difficulty, tag, query)
 
 bot.run(TOKEN)

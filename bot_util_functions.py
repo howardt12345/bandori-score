@@ -120,19 +120,17 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   return tag
 
-def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict):
+def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict, tag: str):
   '''Compare the song with the highest rated songs in the database'''
   res = {}
   user = ctx.message.author
-  highestScores = db.get_highest_songs(str(user.id), song['songName'], difficulties[song['difficulty']])
-  if len(highestScores) == 0:
-    return None
+  highestScores = db.get_highest_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
   for x, category in enumerate(highest):
-    id, _, _ = category
+    id, _, op = category
     if id == "notes.Perfect":
-      res[id] = (song['notes']['Perfect'], highestScores[x]['notes']['Perfect'])
+      res[id] = (song['notes']['Perfect'], highestScores[x]['notes']['Perfect'] if len(highestScores) > 0 else 0)
     else:
-      res[id] = (song[id], highestScores[x][id])
+      res[id] = (song[id], highestScores[x][id] if len(highestScores) > 0 else 0 if op == 'DESC' else -1)
   return res
 
 async def printSongCompare(ctx: commands.Context, highestScores: dict):
@@ -152,7 +150,7 @@ async def printSongCompare(ctx: commands.Context, highestScores: dict):
       id, name, op = category
       score, highestScore = highestScores[id]
       fscore, fhighestScore = format(id, score), format(id, highestScore)
-      if score >= highestScore if op == 'DESC' else score <= highestScore:
+      if score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True:
         msg += f'✅ {name} >= highest ({fscore} >= {fhighestScore})\n'
       else:
         msg += f'❌ {name} < highest ({fscore} < {fhighestScore})\n'

@@ -66,26 +66,34 @@ class Database:
 
 
   def get_scores_of_song(self, userId: str, songName: str):
-    scores = self.db[userId]['songs'].find({"$text": {"$search": songName, "$caseSensitive": False}}).sort('score', ASCENDING) 
+    scores = self.db[userId]['songs'].find({'songName': re.compile(re.escape(songName), re.IGNORECASE)}).sort('score', ASCENDING) 
     self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
     return list(scores)
 
 
-  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, query: str):
-    songs = self.db[userId]['songs'].find({
-      "$text": {"$search": songName, "$caseSensitive": False},
+  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, tag: str, query: str):
+    q = {
+      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
       "difficulty": difficulties.index(difficulty),
-    }).sort(query, DESCENDING).limit(1)
+    }
+    if tag and tag in tags:
+      q['tag'] = tags.index(tag)
+
+    songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING).limit(1)
     self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
     return list(songs)
 
-  def get_highest_songs(self, userId: str, songName: str, difficulty: str):
+  def get_highest_songs(self, userId: str, songName: str, difficulty: str, tag: str):
+    q = {
+      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
+      "difficulty": difficulties.index(difficulty),
+    }
+    if tag and tag in tags:
+      q['tag'] = tags.index(tag)
+
     res = []
     for category in highest:
-      songs = self.db[userId]['songs'].find({
-        "$text": {"$search": songName, "$caseSensitive": False},
-        "difficulty": difficulties.index(difficulty),
-      }).sort(category[0], DESCENDING if category[2] == 'DESC' else ASCENDING).limit(1)
+      songs = self.db[userId]['songs'].find(q).sort(category[0], DESCENDING if category[2] == 'DESC' else ASCENDING).limit(1)
       res.extend(list(songs))
 
     self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
