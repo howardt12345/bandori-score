@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 
 from api import SongInfo
 from functions import songInfoToStr
+from consts import tags
 
 class Database:
   def __init__(self):
@@ -20,9 +21,9 @@ class Database:
   def create_song(self, userId: str, song: SongInfo, tag: str):
     self.db[userId]['songs'].create_index([
       ('songName', TEXT), 
-      ('difficulty', TEXT), 
-      ('rank', TEXT), 
-      ('tag', TEXT),
+      ('tag', ASCENDING),
+      ('difficulty', DESCENDING), 
+      ('rank', ASCENDING), 
       ('score', DESCENDING), 
       ('highScore', DESCENDING),
       ('maxCombo', DESCENDING),
@@ -35,7 +36,7 @@ class Database:
     ], unique=True, name="Ensure unique")
 
     songDict = song.toDict()
-    songDict['tag'] = tag
+    songDict['tag'] = tags.index(tag)
     songDict['TP'] = song.calculateTP()
 
     try:
@@ -110,6 +111,6 @@ class Database:
   def songInfoMsg(song: dict):
     msg = ''
     msg += f"id: `{song.get('_id', '')}`\n"
-    msg += f"tag: `{song.get('tag', '')}`\n"
+    msg += f"tag: `{tags[song.get('tag', '')]}`\n"
     msg += f"```{songInfoToStr(SongInfo().fromDict(song))}```"
     return msg

@@ -26,8 +26,8 @@ class SongInfo:
   def toDict(self):
     return {
       "songName": self.songName,
-      "difficulty": self.difficulty,
-      "rank": self.rank,
+      "difficulty": difficulties.index(self.difficulty),
+      "rank": ranks.index(self.rank),
       "score": self.score,
       "highScore": self.highScore,
       "maxCombo": self.maxCombo,
@@ -39,7 +39,7 @@ class SongInfo:
 
   @staticmethod
   def fromDict(dict):
-    return SongInfo(dict["songName"], dict["difficulty"], dict["rank"], dict["score"], dict["highScore"], dict["maxCombo"], dict["notes"])
+    return SongInfo(dict["songName"], difficulties[dict["difficulty"]], ranks[dict["rank"]], dict["score"], dict["highScore"], dict["maxCombo"], dict["notes"])
 
   @staticmethod
   def fromJSON(json):
@@ -121,7 +121,7 @@ def strToSongInfo(song: str):
   lines = song.splitlines()
   # Get song name and difficulty
   songName, difficulty = lines[0].split(') ', 1)[1], lines[0].split(') ', 1)[0][1:]
-  songInfo.songName =  songName
+  songInfo.songName = songName
   if not difficulty in difficulties:
     return None, f"Invalid difficulty: {difficulty}. Must be in one of {difficulties}"
   songInfo.difficulty = difficulty
