@@ -32,7 +32,7 @@ class Database:
       ('notes.Bad', ASCENDING),
       ('notes.Miss', ASCENDING),
       ('TP', DESCENDING),
-    ], unique=True)
+    ], unique=True, name="Ensure unique")
 
     songDict = song.toDict()
     songDict['tag'] = tag
@@ -66,9 +66,18 @@ class Database:
 
 
   def get_scores_of_song(self, userId: str, songName: str):
-    scores = self.db[userId]['songs'].find({'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)})
+    scores = self.db[userId]['songs'].find({"$text": {"$search": songName, "$caseSensitive": False}}).sort('score', ASCENDING) 
     self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
     return list(scores)
+
+
+  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, query: str):
+    songs = self.db[userId]['songs'].find({
+      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
+      'difficulty': re.compile('^' + re.escape(difficulty) + '$', re.IGNORECASE),
+    }).sort(query, DESCENDING).limit(1)
+    self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
+    return list(songs)
 
 
   def update_song(self, userId: str, songId: str, song: SongInfo):

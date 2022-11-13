@@ -216,4 +216,20 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
           await ctx.send('Error adding song to database')
     elif str(reaction.emoji) == '❌':
       # Ignore
-      await ctx.send('Cancelled manual input')    
+      await ctx.send('Cancelled manual input')
+
+
+async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str):
+  if not songName or difficulty not in difficulties or query not in allowedForHighest:
+    await ctx.send(f'Invalid query: "{query}" for song {songName} and difficulty {difficulty}.\nQuery must be one of: {allowedForHighest}')
+    return
+  user = ctx.message.author
+  scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)
+  if len(scores) == 0:
+    await ctx.send(f'No highest {query} entry for "{songName}" ({difficulty})')
+    return
+  if isinstance(scores, dict):
+    scores = [scores]
+  await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
+  for score in scores:
+    await ctx.send(db.songInfoMsg(score))

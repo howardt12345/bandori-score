@@ -12,3 +12,4 @@ noteWeights = {
   'Bad': 0.25,
   'Miss': 0
 }
+allowedForHighest = ['score', 'maxCombo', 'notes.Perfect', 'TP']

@@ -54,4 +54,9 @@ async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   print('---', ctx.message.author, ctx.message.content)
   await bot_commands.manualInput(bot, db, ctx, defaultTag)
 
+@bot.command()
+async def getHighest(ctx: commands.Context, songName: str, difficulty: str, query: str):
+  print('---', ctx.message.author, ctx.message.content)
+  await bot_commands.getHighest(db, ctx, songName, difficulty, query)
+
 bot.run(TOKEN)
