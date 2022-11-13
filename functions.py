@@ -31,7 +31,8 @@ class SongInfo:
       "score": self.score,
       "highScore": self.highScore,
       "maxCombo": self.maxCombo,
-      "notes": self.notes
+      "notes": self.notes,
+      "TP": self.calculateTP()
     }
   
   def toJSON(self):

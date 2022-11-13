@@ -4,6 +4,7 @@ from discord.ext import commands
 import asyncio
 from consts import *
 import json
+from db import Database
 
 from functions import *
 
@@ -115,3 +116,42 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
     await ctx.send('Thanks for the confirmation!')
 
   return tag
+
+def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict):
+  '''Compare the song with the highest rated songs in the database'''
+  res = {}
+  user = ctx.message.author
+  highestScores = db.get_highest_songs(str(user.id), song['songName'], difficulties[song['difficulty']])
+  if len(highestScores) == 0:
+    return None
+  for x, category in enumerate(highest):
+    id, _, _ = category
+    if id == "notes.Perfect":
+      res[id] = (song['notes']['Perfect'], highestScores[x]['notes']['Perfect'])
+    else:
+      res[id] = (song[id], highestScores[x][id])
+  return res
+
+async def printSongCompare(ctx: commands.Context, highestScores: dict):
+  '''Print the comparison of the song with the highest rated songs in the database'''
+  if highestScores is None:
+    await ctx.send('Failed to compare song with other entries')
+  else:
+    def format(category, score):
+      if category == 'TP':
+        return f'{score*100:.4f}%'
+      elif category == 'rank':
+        return f'{ranks[score]}'
+      else:
+        return score
+    msg = 'Score analysis:\n'
+    for x, category in enumerate(highest):
+      id, name, op = category
+      score, highestScore = highestScores[id]
+      fscore, fhighestScore = format(id, score), format(id, highestScore)
+      if score >= highestScore if op == 'DESC' else score <= highestScore:
+        msg += f'✅ {name} >= highest ({fscore} >= {fhighestScore})\n'
+      else:
+        msg += f'❌ {name} < highest ({fscore} < {fhighestScore})\n'
+    await ctx.send(msg)
+  

@@ -17,7 +17,14 @@ from bot_util_functions import *
 from db import Database
 from consts import tags
 
-async def newScores(scoreAPI: ScoreAPI, bot: commands.Bot, db: Database, ctx: commands.Context, defaultTag: str = ""):
+async def newScores(
+  scoreAPI: ScoreAPI, 
+  bot: commands.Bot, 
+  db: Database, ctx: 
+  commands.Context, 
+  compare: bool, 
+  defaultTag: str = ""
+):
   '''Adds a new score to the database from screenshots given in the user's message'''
   user = ctx.message.author
 
@@ -85,6 +92,8 @@ async def newScores(scoreAPI: ScoreAPI, bot: commands.Bot, db: Database, ctx: co
         pass
 
     if not output is None:
+      if compare:
+        compareRes = compareSongWithHighest(ctx, db, output.toDict())
       res = db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
@@ -97,6 +106,8 @@ async def newScores(scoreAPI: ScoreAPI, bot: commands.Bot, db: Database, ctx: co
         await ctx.send('Error adding song to database')
 
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
+  if compareRes:
+    await printSongCompare(ctx, compareRes)
 
 
 async def getScores(db: Database, ctx: commands.Context, query: str = ""):
@@ -220,8 +231,8 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
 
 
 async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, query: str = ""):
-  if not songName or difficulty not in difficulties or (query and query not in allowedForHighest):
-    await ctx.send(f'Invalid query: "{query}" for song {songName} and difficulty {difficulty}.\nQuery must be one of: {allowedForHighest}')
+  if not songName or difficulty not in difficulties or (query and query not in [x[0] for x in highest]):
+    await ctx.send(f'Invalid query: "{query}" for song {songName} and difficulty {difficulty}.\nQuery must be one of: {[x[0] for x in highest]}')
     return
   user = ctx.message.author
   scores = db.get_song_with_highest(str(user.id), songName, difficulty, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty) 
@@ -232,5 +243,5 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
     await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
     await ctx.send(db.songInfoMsg(scores))
   elif isinstance(scores, list):
-    for x, category in enumerate(allowedForHighest):
-      await ctx.send(f'The highest {category} entry for "{songName}" ({difficulty}): \n{db.songInfoMsg(scores[x])}')
+    for x, category in enumerate(highest):
+      await ctx.send(f'The highest {category[1]} entry for "{songName}" ({difficulty}): \n{db.songInfoMsg(scores[x])}')

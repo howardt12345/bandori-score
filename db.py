@@ -37,7 +37,6 @@ class Database:
 
     songDict = song.toDict()
     songDict['tag'] = tags.index(tag)
-    songDict['TP'] = song.calculateTP()
 
     try:
       new_song = self.db[userId]['songs'].insert_one(songDict)
@@ -82,11 +81,11 @@ class Database:
 
   def get_highest_songs(self, userId: str, songName: str, difficulty: str):
     res = []
-    for category in allowedForHighest:
+    for category in highest:
       songs = self.db[userId]['songs'].find({
         "$text": {"$search": songName, "$caseSensitive": False},
         "difficulty": difficulties.index(difficulty),
-      }).sort(category, DESCENDING).limit(1)
+      }).sort(category[0], DESCENDING if category[2] == 'DESC' else ASCENDING).limit(1)
       res.extend(list(songs))
 
     self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')

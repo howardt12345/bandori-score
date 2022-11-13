@@ -30,9 +30,9 @@ scoreAPI = ScoreAPI(draw=True)
 db = Database()
 
 @bot.command()
-async def newScores(ctx: commands.Context, defaultTag: str = ""):
+async def newScores(ctx: commands.Context, compare: bool = True, defaultTag: str = ""):
   print('---', ctx.message.author, ctx.message.content)
-  await bot_commands.newScores(scoreAPI, bot, db, ctx, defaultTag)
+  await bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag)
 
 @bot.command()
 async def getScores(ctx: commands.Context, *, query: str = ""):
