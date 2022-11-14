@@ -21,3 +21,10 @@ highest = [
   ('notes.Perfect', 'Number of Perfects', 'DESC'),
   ('TP', 'Technical Points', 'DESC'),
 ]
+difficultyColors = {
+  'Easy': '#3376f7',
+  'Normal': '#58ef40',
+  'Hard': '#f9c234',
+  'Expert': '#ff2d31',
+  'Special': '#f0239a',
+}

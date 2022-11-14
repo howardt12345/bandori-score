@@ -169,23 +169,28 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
     maxCombos = [song['maxCombo'] for song in songs]
   TP = [song['TP'] for song in songs]
 
-  figure, axis = plt.subplots(3, 1, figsize=(7, 7))
+  figure, axis = plt.subplots(3, 1, figsize=(7, 9))
 
   def format_number(data_value, indx):
     if data_value >= 1_000_000:
-      formatter = '{:1.1f}M'.format(data_value*0.000_001)
+      formatter = '{:1.2f}M'.format(data_value*0.000_001)
     else:
-      formatter = '{:1.0f}K'.format(data_value*0.001)
+      formatter = '{:1.2f}K'.format(data_value*0.001)
     return formatter
+  
+  def plotDot(x, y, a):
+      axis[a].plot(x, y, 'o', color=difficultyColors[difficulties[songs[i]['difficulty']]])
 
-  axis[0].plot(scores, marker='o')
+  axis[0].plot(scores, color='silver')
   for i, v in enumerate(scores):
-    axis[0].annotate(format_number(v, i), xy=(i, v), xytext=(5, -5), textcoords='offset points', ha='center', va='top')
-    axis[0].set_title("Scores")
-    axis[0].axes.get_xaxis().set_visible(False)
-    axis[0].axes.get_yaxis().set_major_formatter(format_number)
+    axis[0].annotate(v, xy=(i, v), xytext=(0, -5), textcoords='offset points', ha='center', va='top')
+    plotDot(i, v, 0)
 
-    axis[0].grid(True)
+  axis[0].set_title("Scores")
+  axis[0].axes.get_xaxis().set_visible(False)
+  axis[0].axes.get_yaxis().set_major_formatter(format_number)
+
+  axis[0].grid(True)
 
   min_offset, max_offset = 1, 5
   min_notes, max_notes = 0, max(perfects if not showMaxCombo else [max(perfects), max(maxCombos)]) + max_offset
@@ -196,11 +201,11 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
   good_transformed = [float(good + min_offset)/distance for good in goods]
   bad_transformed = [float(bad + min_offset)/distance for bad in bads]
   miss_transformed = [float(miss + min_offset)/distance for miss in misses]
-  axis[1].plot(perfect_transformed, label="Perfect", marker='o')
-  axis[1].plot(great_transformed, label="Great", marker='o', color='deeppink')
-  axis[1].plot(good_transformed, label="Good", marker='o', color='greenyellow')
-  axis[1].plot(bad_transformed, label="Bad", marker='o', color='mediumblue')
-  axis[1].plot(miss_transformed, label="Miss", marker='o', color='slategray')
+  axis[1].plot(perfect_transformed, label="Perfect", color='aquamarine', marker='o')
+  axis[1].plot(great_transformed, label="Great", color='deeppink', marker='o')
+  axis[1].plot(good_transformed, label="Good", color='greenyellow', marker='o')
+  axis[1].plot(bad_transformed, label="Bad", color='mediumblue', marker='o')
+  axis[1].plot(miss_transformed, label="Miss", color='slategray', marker='o')
 
   for i, v in enumerate(perfect_transformed):
     axis[1].annotate(perfects[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
@@ -221,7 +226,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   axis[1].ticklabel_format(style='plain', axis='both', useOffset=False)
   axis[1].set_title("Notes")
-  axis[1].legend(loc='upper left', prop={'size': 8})
+  axis[1].legend(loc='center right', prop={'size': 8})
   axis[1].axes.get_xaxis().set_visible(False)
   axis[1].set_yscale('logit', one_half="1/2", use_overline=True)
 
@@ -234,7 +239,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
   axis[1].grid(True)
 
   min_tp = min(TP)
-  axis[2].plot(TP, marker='o')
+  axis[2].plot(TP, color='silver')
   axis[2].set_title("Technical Points")
   axis[2].set_ylim([min_tp-(1.0-min_tp)*0.25, 1.0])
   axis[2].grid(True)
@@ -243,8 +248,10 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   for i, v in enumerate(TP):
     axis[2].annotate('{:,.2%}'.format(v), xy=(i, v), xytext=(5, 5), textcoords='offset points', ha='center', va='bottom')
+    plotDot(i, v, 2)
 
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
+  figure.tight_layout()
   plt.gcf().set_size_inches(7, 21)
   buf = BytesIO()
   plt.savefig(buf, format='png')
