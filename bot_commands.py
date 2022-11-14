@@ -148,7 +148,9 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
 
 
   song = SongInfo.fromDict(score)
-  newSong, _ = await confirmSongInfo(bot, ctx, song)
+  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True)
+  if wantTag:
+    tag = await promptTag(bot, ctx)
   if newSong:
     # Update the song
     db.update_song(str(user.id), id, newSong)
@@ -260,10 +262,11 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   user = ctx.message.author
   counts = db.get_song_counts(str(user.id), difficulty, tag)
   counts.sort(key=lambda x: x['_id'].lower())
-  counts.sort(key=lambda x: x['count'], reverse=True)
-  msgText = f"You have the following number of{f'{difficulty} ' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''}:\n"
+  totalCount = sum([x['count'] for x in counts])
+  # counts.sort(key=lambda x: x['count'], reverse=True)
+  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
-    msgText += f'`{count["_id"]}: {count["count"]}`\n'
+    msgText += f'`{count["_id"]}`: {count["count"]}\n'
   await ctx.send(msgText)
 
 
@@ -275,6 +278,6 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
-  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=user.name)
+  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=user.name, showMaxCombo=True)
   await ctx.send(f"Stats for{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   

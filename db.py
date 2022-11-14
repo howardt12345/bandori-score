@@ -106,10 +106,13 @@ class Database:
     self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
     return res
 
-  def update_song(self, userId: str, songId: str, song: SongInfo):
+  def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):
+    songDict = song.toDict()
+    if tag and tag in tags:
+      songDict['tag'] = tags.index(tag)
     self.db[userId]['songs'].update_one(
       {"_id": ObjectId(songId)},
-      {"$set": song.toDict()}
+      {"$set": songDict}
     )
 
     updated_song = self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
