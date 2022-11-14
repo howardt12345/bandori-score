@@ -183,7 +183,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   axis[0].plot(scores, color='silver')
   for i, v in enumerate(scores):
-    axis[0].annotate(v, xy=(i, v), xytext=(0, -5), textcoords='offset points', ha='center', va='top')
+    axis[0].annotate(f"{v}\n{songs[i]['songName']}", xy=(i, v), xytext=(0, 5*(1 if i % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if i % 2 == 1 else 'top', fontsize=8)
     plotDot(i, v, 0)
 
   axis[0].set_title("Scores")
@@ -247,7 +247,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
   axis[2].axes.get_yaxis().set_major_formatter(PercentFormatter(1))
 
   for i, v in enumerate(TP):
-    axis[2].annotate('{:,.2%}'.format(v), xy=(i, v), xytext=(5, 5), textcoords='offset points', ha='center', va='bottom')
+    axis[2].annotate(f"{'{:,.2%}'.format(v)}\n{songs[i]['songName']}", xy=(i, v), xytext=(0, 5*(1 if i % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if i % 2 == 1 else 'top', fontsize=8)
     plotDot(i, v, 2)
 
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)

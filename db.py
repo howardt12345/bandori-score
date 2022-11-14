@@ -65,9 +65,9 @@ class Database:
     return song
 
 
-  def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = ""):
+  def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = "", matchExact=False):
     q = {
-      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
+      'songName': re.compile('^' + re.escape(songName) + '$' if matchExact else re.escape(songName), re.IGNORECASE)
     }
     if difficulty and difficulty in difficulties:
       q['difficulty'] = difficulties.index(difficulty)
