@@ -53,7 +53,7 @@ class SongInfo:
     return sum(self.notes.values())
 
   def calculateTP(self):
-    '''Calculates the total percentage of the song based on note weighting'''
+    '''Calculates the Technical Points of the song based on note weighting'''
     tp = 0
     for noteType in self.notes:
       tp += self.notes[noteType] * noteWeights[noteType]
@@ -235,7 +235,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   min_tp = min(TP)
   axis[2].plot(TP, marker='o')
-  axis[2].set_title("Total Percentage")
+  axis[2].set_title("Technical Points")
   axis[2].set_ylim([min_tp-(1.0-min_tp)*0.25, 1.0])
   axis[2].grid(True)
   axis[2].axes.get_xaxis().set_visible(False)

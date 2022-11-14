@@ -19,5 +19,5 @@ highest = [
   ('rank', 'Rank', 'ASC'),
   ('maxCombo', 'Max Combo', 'DESC'),
   ('notes.Perfect', 'Number of Perfects', 'DESC'),
-  ('TP', 'Total Percentage', 'DESC'),
+  ('TP', 'Technical Points', 'DESC'),
 ]
