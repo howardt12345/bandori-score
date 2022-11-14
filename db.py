@@ -79,10 +79,11 @@ class Database:
 
 
   def get_song_with_highest(self, userId: str, songName: str, difficulty: str, tag: str, query: str):
-    q = {
-      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
-      "difficulty": difficulties.index(difficulty),
-    }
+    q = {}
+    if songName:
+      q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
+    if difficulty and difficulty in difficulties:
+      q['difficulty'] = difficulties.index(difficulty)
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
 
@@ -91,10 +92,11 @@ class Database:
     return list(songs)
 
   def get_highest_songs(self, userId: str, songName: str, difficulty: str, tag: str):
-    q = {
-      'songName': re.compile('^' + re.escape(songName) + '$', re.IGNORECASE),
-      "difficulty": difficulties.index(difficulty),
-    }
+    q = {}
+    if songName:
+      q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
+    if difficulty and difficulty in difficulties:
+      q['difficulty'] = difficulties.index(difficulty)
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
 

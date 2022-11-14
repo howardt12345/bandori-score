@@ -15,11 +15,11 @@ noteWeights = {
   'Miss': 0
 }
 highest = [
-  ('score', 'Score', 'DESC'),
-  ('rank', 'Rank', 'ASC'),
-  ('maxCombo', 'Max Combo', 'DESC'),
-  ('notes.Perfect', 'Number of Perfects', 'DESC'),
-  ('TP', 'Technical Points', 'DESC'),
+  ('score', 'Score', 'DESC', False),
+  ('rank', 'Rank', 'ASC', True),
+  ('maxCombo', 'Max Combo', 'DESC', False),
+  ('notes.Perfect', 'Number of Perfects', 'DESC', False),
+  ('TP', 'Technical Points', 'DESC', False),
 ]
 difficultyColors = {
   'Easy': '#3376f7',
