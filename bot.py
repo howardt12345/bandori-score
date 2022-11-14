@@ -17,9 +17,11 @@ from consts import tags, botAliases
 import bot_commands
 from bot_util_functions import msgLog
 
+import sys
+
 # Get token from .env
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv('TOKEN_DEV' if len(sys.argv) > 1 and sys.argv[1] == 'dev' else 'TOKEN')
 
 # Create bot
 intents = discord.Intents.default()
