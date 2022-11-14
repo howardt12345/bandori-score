@@ -114,7 +114,7 @@ class ScoreAPI:
 
     # Make a bounding box right of the difficulty for the song name
     tl_x, tl_y = x+w+10, y
-    br_x, br_y = x+w+750, y+h
+    br_x, br_y = x+w+825, y+h
 
     # Draw the rectangle of the bounding box if draw is enabled
     if self.draw:
