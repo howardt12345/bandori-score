@@ -1,11 +1,15 @@
 # shut opencv errors up
 import os
+
+from db import Database
 os.environ["OPENCV_LOG_LEVEL"]="SILENT"
 
 import cv2
 import glob
 from api import *
 from functions import *
+import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 
 def testDir(path):
   '''Test on a directory of images'''
@@ -32,4 +36,7 @@ def testImage(path):
 
 # testDir('live')
 # testImage('testdata/test3.jpg')
-print(emptyTemplate())
+
+db = Database()
+songs = db.get_scores_of_song('211981146941030401', "Neo-Aspect", "Expert", "live")
+songCountGraph(songs, "Neo-Aspect", showMaxCombo=True)

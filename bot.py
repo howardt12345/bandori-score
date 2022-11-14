@@ -65,4 +65,9 @@ async def getSongCounts(ctx: commands.Context, difficulty: str = None, tag: str 
   msgLog(ctx)
   await bot_commands.getSongCounts(db, ctx, difficulty, tag)
 
+@bot.command()
+async def getSongStats(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = ""):
+  msgLog(ctx)
+  await bot_commands.getSongStats(db, ctx, songName, difficulty, tag)
+
 bot.run(TOKEN)

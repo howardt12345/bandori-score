@@ -2,9 +2,11 @@
 import numpy as np
 import cv2
 from discord.ext import commands
-import asyncio
+from io import BytesIO
 from consts import *
 import json
+import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 
 class SongInfo:
   '''Object representing a song's info'''
@@ -155,6 +157,100 @@ def strToSongInfo(song: str):
   songInfo.notes = notes
 
   return songInfo, None
+
+def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None):
+  scores = [song['score'] for song in songs]
+  perfects = [song['notes']['Perfect'] for song in songs]
+  greats = [song['notes']['Great'] for song in songs]
+  goods = [song['notes']['Good'] for song in songs]
+  bads = [song['notes']['Bad'] for song in songs]
+  misses = [song['notes']['Miss'] for song in songs]
+  if showMaxCombo:
+    maxCombos = [song['maxCombo'] for song in songs]
+  TP = [song['TP'] for song in songs]
+
+  figure, axis = plt.subplots(3, 1, figsize=(7, 7))
+
+  def format_number(data_value, indx):
+    if data_value >= 1_000_000:
+      formatter = '{:1.1f}M'.format(data_value*0.000_001)
+    else:
+      formatter = '{:1.0f}K'.format(data_value*0.001)
+    return formatter
+
+  axis[0].plot(scores, marker='o')
+  for i, v in enumerate(scores):
+    axis[0].annotate(format_number(v, i), xy=(i, v), xytext=(5, -5), textcoords='offset points', ha='center', va='top')
+    axis[0].set_title("Scores")
+    axis[0].axes.get_xaxis().set_visible(False)
+    axis[0].axes.get_yaxis().set_major_formatter(format_number)
+
+    axis[0].grid(True)
+
+  min_offset, max_offset = 1, 5
+  min_notes, max_notes = 0, max(perfects if not showMaxCombo else [max(perfects), max(maxCombos)]) + max_offset
+  distance = max_notes - min_notes
+
+  perfect_transformed = [float(perfect + min_offset)/distance for perfect in perfects]
+  great_transformed = [float(great + min_offset)/distance for great in greats]
+  good_transformed = [float(good + min_offset)/distance for good in goods]
+  bad_transformed = [float(bad + min_offset)/distance for bad in bads]
+  miss_transformed = [float(miss + min_offset)/distance for miss in misses]
+  axis[1].plot(perfect_transformed, label="Perfect", marker='o')
+  axis[1].plot(great_transformed, label="Great", marker='o', color='deeppink')
+  axis[1].plot(good_transformed, label="Good", marker='o', color='greenyellow')
+  axis[1].plot(bad_transformed, label="Bad", marker='o', color='mediumblue')
+  axis[1].plot(miss_transformed, label="Miss", marker='o', color='slategray')
+
+  for i, v in enumerate(perfect_transformed):
+    axis[1].annotate(perfects[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(great_transformed):
+    axis[1].annotate(greats[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(good_transformed):
+    axis[1].annotate(goods[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(bad_transformed):
+    axis[1].annotate(bads[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(miss_transformed):
+    axis[1].annotate(misses[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  
+  if showMaxCombo:
+    maxCombo_transformed = [float(maxCombo + min_offset)/distance for maxCombo in maxCombos]
+    axis[1].plot(maxCombo_transformed, label="Max Combo", marker='o', color='lightgray')
+    for i, v in enumerate(maxCombo_transformed):
+      axis[1].annotate(maxCombos[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+
+  axis[1].ticklabel_format(style='plain', axis='both', useOffset=False)
+  axis[1].set_title("Notes")
+  axis[1].legend(loc='upper left', prop={'size': 8})
+  axis[1].axes.get_xaxis().set_visible(False)
+  axis[1].set_yscale('logit', one_half="1/2", use_overline=True)
+
+  amount, step = 7, 1
+  rangeList = [y ** 2 for y in range(min_notes, min_notes+amount*step, step)]
+  ticks = [float(x+min_offset)/distance for x in rangeList] + [0.5] + [float(max_notes-x-(max_offset-1))/distance for x in reversed(rangeList)]
+  minorTicks = rangeList + [(max_notes-min_notes)/2] + [max_notes-x-max_offset for x in reversed(rangeList)]
+
+  axis[1].set_yticks(ticks, minorTicks)
+  axis[1].grid(True)
+
+  min_tp = min(TP)
+  axis[2].plot(TP, marker='o')
+  axis[2].set_title("Total Percentage")
+  axis[2].set_ylim([min_tp-(1.0-min_tp)*0.25, 1.0])
+  axis[2].grid(True)
+  axis[2].axes.get_xaxis().set_visible(False)
+  axis[2].axes.get_yaxis().set_major_formatter(PercentFormatter(1))
+
+  for i, v in enumerate(TP):
+    axis[2].annotate('{:,.2%}'.format(v), xy=(i, v), xytext=(5, 5), textcoords='offset points', ha='center', va='bottom')
+
+  figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
+  plt.gcf().set_size_inches(7, 21)
+  buf = BytesIO()
+  plt.savefig(buf, format='png')
+  buf.seek(0)
+  plt.close()
+  return buf
 
 def songTemplateFormat():
   '''Returns a formatted string of the song template'''

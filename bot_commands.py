@@ -265,3 +265,16 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   for count in counts:
     msgText += f'`{count["_id"]}: {count["count"]}`\n'
   await ctx.send(msgText)
+
+
+async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = ""):
+  '''Gets the stats of a song given a song name and difficulty'''
+  user = ctx.message.author
+  await ctx.send(f"Getting stats for{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
+  stats = db.get_scores_of_song(str(user.id), songName, difficulty, tag)
+  if len(stats) == 0:
+    await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
+    return
+  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=user.name)
+  await ctx.send(f"Stats for{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
+  
