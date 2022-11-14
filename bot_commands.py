@@ -1,6 +1,6 @@
 # Functions for the bot commands
 
-from io import BytesIO
+from io import BytesIO, StringIO
 import discord
 from discord.ext import commands
 import asyncio
@@ -118,7 +118,8 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
   '''Gets the scores from the database given a query by the user'''
   user = ctx.message.author
   if not query:
-    scores = db.get_songs(str(user.id))
+    await ctx.send('A query must be provided')
+    return
   else:
     try:
       scores = db.get_song(str(user.id), query.strip())
@@ -240,7 +241,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
 async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, tag: str = "", query: str = ""):
   '''Gets the highest score of a song given a song nam, difficulty, and tag'''
 
-  if not songName or difficulty not in difficulties or (query and query not in [x[0] for x in highest]):
+  if (query and query not in [x[0] for x in highest]):
     await ctx.send(f'''Invalid query: "{query}" for song {songName} and difficulty {difficulty}.
     \nSong name and difficulty must be provided and query must be one of: {[x[0] for x in highest]}''')
     return
@@ -254,7 +255,9 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
     await ctx.send(db.songInfoMsg(scores))
   elif isinstance(scores, list):
     for x, category in enumerate(highest):
-      await ctx.send(f'The highest {category[1]} entry for "{songName}" ({difficulty}): \n{db.songInfoMsg(scores[x])}')
+      if category[3]:
+        continue
+      await ctx.send(f"The highest {category[1]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
 
 
 async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = ""):
@@ -267,7 +270,13 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
     msgText += f'`{count["_id"]}`: {count["count"]}\n'
-  await ctx.send(msgText)
+
+  if len(msgText) > 2000:
+    buf = StringIO(msgText)
+    f = discord.File(buf, filename=f'{user.id}_songs.,d')
+    await ctx.send(file=f)
+  else:
+    await ctx.send(msgText)
 
 
 async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = ""):
@@ -278,6 +287,6 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
-  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=user.name, showMaxCombo=True)
+  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=str(user), showMaxCombo=True)
   await ctx.send(f"Stats for{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   
