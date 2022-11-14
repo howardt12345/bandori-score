@@ -13,7 +13,7 @@ import numpy as np
 
 from api import ScoreAPI
 from db import Database
-from consts import tags
+from consts import tags, botAliases
 import bot_commands
 from bot_util_functions import msgLog
 
@@ -30,42 +30,42 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 scoreAPI = ScoreAPI(draw=True)
 db = Database()
 
-@bot.command()
+@bot.command(aliases=botAliases['newScores'])
 async def newScores(ctx: commands.Context, defaultTag: str = "", compare: bool = True):
   msgLog(ctx)
   await bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag)
 
-@bot.command()
+@bot.command(aliases=botAliases['getScores'])
 async def getScores(ctx: commands.Context, *, query: str = ""):
   msgLog(ctx)
   await bot_commands.getScores(db, ctx, query)
 
-@bot.command()
+@bot.command(aliases=botAliases['editScore'])
 async def editScore(ctx: commands.Context, id: str):
   msgLog(ctx)
   await bot_commands.editScore(bot, db, ctx, id)
 
-@bot.command()
+@bot.command(aliases=botAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
   await bot_commands.deleteScore(bot, db, ctx, id)
 
-@bot.command()
+@bot.command(aliases=botAliases['manualInput'])
 async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   msgLog(ctx)
   await bot_commands.manualInput(bot, db, ctx, defaultTag)
 
-@bot.command()
+@bot.command(aliases=botAliases['getHighest'])
 async def getHighest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
   msgLog(ctx)
   await bot_commands.getHighest(db, ctx, songName, difficulty, tag, query)
 
-@bot.command()
-async def getSongCounts(ctx: commands.Context, difficulty: str = None, tag: str = ""):
+@bot.command(aliases=botAliases['listSongs'])
+async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = ""):
   msgLog(ctx)
   await bot_commands.getSongCounts(db, ctx, difficulty, tag)
 
-@bot.command()
+@bot.command(aliases=botAliases['getSongStats'])
 async def getSongStats(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = ""):
   msgLog(ctx)
   await bot_commands.getSongStats(db, ctx, songName, difficulty, tag)
