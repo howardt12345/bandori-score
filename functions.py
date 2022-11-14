@@ -169,7 +169,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
     maxCombos = [song['maxCombo'] for song in songs]
   TP = [song['TP'] for song in songs]
 
-  figure, axis = plt.subplots(3, 1, figsize=(7, 9))
+  figure, axis = plt.subplots(3, 1, figsize=(7 if len(songs) < 7 else len(songs), 9))
 
   def format_number(data_value, indx):
     if data_value >= 1_000_000:
@@ -252,7 +252,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
   figure.tight_layout()
-  plt.gcf().set_size_inches(7, 21)
+  plt.gcf().set_size_inches(7 if len(songs) < 7 else len(songs), 21)
   buf = BytesIO()
   plt.savefig(buf, format='png')
   buf.seek(0)
