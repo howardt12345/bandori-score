@@ -218,7 +218,8 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   for i, v in enumerate(TP):
     plotDot(i, v, 2, '{:,.2%}'.format(v), min_tp + (max(TP) - min_tp) / 2)
 
-  figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{bd.closestSongName(songName)}{f' with tag {tag}' if tag else ''}", fontsize=16)
+  closestSongName = bd.closestSongName(songName)
+  figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
   figure.tight_layout()
   plt.gcf().set_size_inches(7 if len(songs) < 7 else len(songs), 21)
   buf = BytesIO()
