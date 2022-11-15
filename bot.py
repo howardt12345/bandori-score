@@ -1,19 +1,14 @@
 # Bot with chat commands
 
-from io import BytesIO
 import discord
 from discord.ext import commands
-import asyncio
 
 from dotenv import load_dotenv
 import os
 
-import cv2
-import numpy as np
-
 from api import ScoreAPI
 from db import Database
-from consts import tags, botAliases
+from consts import botAliases
 import bot_commands
 from bot_util_functions import msgLog
 
