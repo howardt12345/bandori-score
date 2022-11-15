@@ -60,9 +60,3 @@ class BestdoriAPI:
   def getDifficultyFromSongName(self, songName, difficulty: int):
     song = self.findSongFromSongName(songName)
     return self.getDifficulty(song, difficulty)
-
-
-api = BestdoriAPI()
-song = api.findSongFromSongName('Koi wa Ameagari no You ni')
-print(song)
-print(api.getBandName(str(song['bandId'])))

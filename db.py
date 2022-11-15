@@ -7,6 +7,7 @@ import re
 from bson.objectid import ObjectId
 
 from api import SongInfo
+from bestdori import BestdoriAPI
 from functions import songInfoToStr
 from consts import *
 
@@ -16,6 +17,7 @@ class Database:
     self.client = MongoClient(os.getenv('ATLAS_URI'))
     self.db = self.client[os.getenv('DB_NAME')]
     print("Connected to the MongoDB database!")
+    self.bestdori = BestdoriAPI()
 
 
   def create_song(self, userId: str, song: SongInfo, tag: str):

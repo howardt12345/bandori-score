@@ -159,6 +159,7 @@ def strToSongInfo(song: str):
   return songInfo, None
 
 def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None):
+  songs.sort(key=lambda x: x["difficultyLvl"])
   scores = [song['score'] for song in songs]
   perfects = [song['notes']['Perfect'] for song in songs]
   greats = [song['notes']['Great'] for song in songs]
@@ -192,7 +193,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
 
   axis[0].grid(True)
 
-  min_offset, max_offset = 1, 5
+  min_offset, max_offset = 1, 3
   min_notes, max_notes = 0, max(perfects if not showMaxCombo else [max(perfects), max(maxCombos)]) + max_offset
   distance = max_notes - min_notes
 

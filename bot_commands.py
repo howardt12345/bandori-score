@@ -287,6 +287,9 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
+  # Add difficulty level to stats
+  for stat in stats:
+    stat['difficultyLvl'] = db.bestdori.getDifficultyFromSongName(stat['songName'], stat['difficulty'])
   graphFile = songCountGraph(stats, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo)
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   
