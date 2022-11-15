@@ -282,7 +282,7 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
     await ctx.send(msgText)
 
 
-async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = "", matchExact: bool = False, showMaxCombo: bool = False):
+async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = "", matchExact = False, showMaxCombo = False, showSongNames = False, interpolate = False):
   '''Gets the stats of a song given a song name and difficulty'''
   user = ctx.message.author
   await ctx.send(f"Getting stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
@@ -292,6 +292,6 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
     return
   # Add difficulty level to stats
   songs = [SongInfo.fromDict(x) for x in stats]
-  graphFile = songCountGraph(songs, db, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo)
+  graphFile = songCountGraph(songs, db, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo, showSongNames=showSongNames, interpolate=interpolate)
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   

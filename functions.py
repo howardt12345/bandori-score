@@ -107,11 +107,11 @@ def strToSongInfo(song: str):
 
   return songInfo, None
 
-def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None, interpolate = False):
+def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None, showSongNames = False, interpolate = False):
   scores = [song.score for song in songs]
 
   if interpolate:
-    highScores = [song.highScore for song in songs]
+    highScores = list(filter(lambda hs: hs > 0, [song.highScore for song in songs]))
     scoresSet = set(scores + highScores)
     newSongs = songs.copy()
     for song in songs:
@@ -131,7 +131,7 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
     maxCombos = [song.maxCombo for song in songs]
   TP = [song.calculateTP() for song in songs]
 
-  figure, axis = plt.subplots(3, 1, figsize=(7 if len(songs) < 7 else len(songs), 9))
+  figure, axis = plt.subplots(3, 1, figsize=(6 if len(songs) < 12 else len(songs)/2, 9))
 
   def format_number(data_value, indx):
     if data_value >= 1_000_000:
@@ -140,15 +140,15 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
       formatter = '{:1.2f}K'.format(data_value*0.001)
     return formatter
   
-  def plotDot(x, y, a, v):
+  def plotDot(x, y, a, v, h):
     axis[a].plot(x, y, 'o', color=difficultyColors[songs[x].difficulty])
-    axis[a].annotate(v, xy=(x, y), xytext=(0, 5*(1 if x % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 1 else 'top', fontsize=8)
-    if not songName and not interpolate:
-      axis[a].annotate(f'{songs[x].getSongName(db)}\n{songs[x].getBandName(db)}', xy=(x, y), xytext=(0, 10*(1 if x % 2 == 0 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 0 else 'top', fontsize=5)
+    axis[a].annotate(f"{v}\n{'(Interpolated)' if songs[x].totalNotes() <= 0 else ''}".strip(), xy=(x, y), xytext=(0, 5*(1 if y > h else -1)), textcoords='offset points', ha='center', va='bottom' if y > h else 'top', fontsize=8)
+    if showSongNames:
+      axis[a].annotate(f'{songs[x].getSongName(db)}\n{songs[x].getBandName(db)}', xy=(x, y), xytext=(0, 10*(1 if y < h else -1)), textcoords='offset points', ha='left' if y < h else 'right', va='bottom' if y < h else 'top', fontsize=6, rotation=90)
 
   axis[0].plot(scores, color='silver')
   for i, v in enumerate(scores):
-    plotDot(i, v, 0, v)
+    plotDot(i, v, 0, v, min(scores) + (max(scores) - min(scores)) / 2)
 
   axis[0].set_title("Scores")
   axis[0].axes.get_xaxis().set_visible(False)
@@ -203,7 +203,11 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
   axis[1].grid(True)
 
   min_tp = min(filter(lambda tp: tp > 0.01, TP))
-  axis[2].plot(TP, color='silver')
+  xs = np.arange(len(TP))
+  tp_y = np.array([tp if tp > 0 else None for tp in TP])
+  tp_mask = [True if tp > 0 else False for tp in TP]
+ 
+  axis[2].plot(xs[tp_mask], tp_y[tp_mask], color='silver')
   axis[2].set_title("Technical Points")
   axis[2].set_ylim([min_tp-(1.0-min_tp)*0.25, 1.0])
   axis[2].grid(True)
@@ -211,7 +215,7 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
   axis[2].axes.get_yaxis().set_major_formatter(PercentFormatter(1))
 
   for i, v in enumerate(TP):
-    plotDot(i, v, 2, '{:,.2%}'.format(v))
+    plotDot(i, v, 2, '{:,.2%}'.format(v), min_tp + (max(TP) - min_tp) / 2)
 
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
   figure.tight_layout()
