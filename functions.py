@@ -107,8 +107,21 @@ def strToSongInfo(song: str):
 
   return songInfo, None
 
-def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None):
+def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None, interpolate = False):
   scores = [song.score for song in songs]
+
+  if interpolate:
+    highScores = [song.highScore for song in songs]
+    scoresSet = set(scores + highScores)
+    newSongs = songs.copy()
+    for song in songs:
+      if song.highScore in scoresSet and song.highScore not in scores:
+        newSongs.append(SongInfo(songName=song.songName, difficulty=song.difficulty, score=song.highScore, rank=song.rank))
+    
+    songs = sorted(newSongs, key=lambda song: song.score)
+  
+  scores = [song.score for song in songs]
+
   perfects = [song.notes['Perfect'] for song in songs]
   greats = [song.notes['Great'] for song in songs]
   goods = [song.notes['Good'] for song in songs]
@@ -130,7 +143,7 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
   def plotDot(x, y, a, v):
     axis[a].plot(x, y, 'o', color=difficultyColors[songs[x].difficulty])
     axis[a].annotate(v, xy=(x, y), xytext=(0, 5*(1 if x % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 1 else 'top', fontsize=8)
-    if not songName:
+    if not songName and not interpolate:
       axis[a].annotate(f'{songs[x].getSongName(db)}\n{songs[x].getBandName(db)}', xy=(x, y), xytext=(0, 10*(1 if x % 2 == 0 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 0 else 'top', fontsize=5)
 
   axis[0].plot(scores, color='silver')
@@ -189,7 +202,7 @@ def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = N
   axis[1].set_yticks(ticks, minorTicks)
   axis[1].grid(True)
 
-  min_tp = min(TP)
+  min_tp = min(filter(lambda tp: tp > 0.01, TP))
   axis[2].plot(TP, color='silver')
   axis[2].set_title("Technical Points")
   axis[2].set_ylim([min_tp-(1.0-min_tp)*0.25, 1.0])
