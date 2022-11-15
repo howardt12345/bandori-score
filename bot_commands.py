@@ -154,7 +154,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
     tag = await promptTag(bot, ctx)
   if newSong:
     # Update the song
-    db.update_song(str(user.id), id, newSong)
+    db.update_song(str(user.id), id, newSong, tag)
     await ctx.send(f'Score with id `{id}` updated')
   else:
     await ctx.send('No changes made')
