@@ -12,10 +12,11 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songInfoToStr
-from bot_util_functions import *
+from functions import songCountGraph, songInfoToStr
+from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighest, printSongCompare
+from song_info import SongInfo
 from db import Database
-from consts import tags
+from consts import tags, highest
 
 async def newScores(
   scoreAPI: ScoreAPI, 
@@ -152,6 +153,8 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
   newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True)
   if wantTag:
     tag = await promptTag(bot, ctx)
+  else:
+    tag = None
   if newSong:
     # Update the song
     db.update_song(str(user.id), id, newSong, tag)
@@ -269,11 +272,11 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   # counts.sort(key=lambda x: x['count'], reverse=True)
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
-    msgText += f'`{count["_id"]}`: {count["count"]}\n'
+    msgText += f'`{db.bestdori.closestSongName(count["_id"])}`: {count["count"]}\n'
 
   if len(msgText) > 2000:
     buf = StringIO(msgText)
-    f = discord.File(buf, filename=f'{user.id}_songs.,d')
+    f = discord.File(buf, filename=f'{user.id}_songs.md')
     await ctx.send(file=f)
   else:
     await ctx.send(msgText)
@@ -282,14 +285,13 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
 async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = "", matchExact: bool = False, showMaxCombo: bool = False):
   '''Gets the stats of a song given a song name and difficulty'''
   user = ctx.message.author
-  await ctx.send(f"Getting stats for {f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
+  await ctx.send(f"Getting stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
   stats = db.get_scores_of_song(str(user.id), songName, difficulty, tag, matchExact)
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
   # Add difficulty level to stats
-  for stat in stats:
-    stat['difficultyLvl'] = db.bestdori.getDifficultyFromSongName(stat['songName'], stat['difficulty'])
-  graphFile = songCountGraph(stats, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo)
+  songs = [SongInfo.fromDict(x) for x in stats]
+  graphFile = songCountGraph(songs, db, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo)
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   

@@ -1,63 +1,12 @@
 
 import numpy as np
 import cv2
-from discord.ext import commands
 from io import BytesIO
 from consts import *
-import json
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
 
-class SongInfo:
-  '''Object representing a song's info'''
-  def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo=-1, notes={}):
-    self.songName = songName
-    self.difficulty = difficulty
-    self.rank = rank
-    self.score = score
-    self.highScore = highScore
-    self.maxCombo = maxCombo
-    self.notes = notes
-
-  def __str__(self):
-    return f"{self.songName} - {self.difficulty}\nRank: {self.rank}, Score: {self.score}, High Score: {self.highScore}, Max Combo: {self.maxCombo}\n{self.notes}"
-
-  def __repr__(self):
-    return self.__str__()
-
-  def toDict(self):
-    return {
-      "songName": self.songName,
-      "difficulty": difficulties.index(self.difficulty),
-      "rank": ranks.index(self.rank),
-      "score": self.score,
-      "highScore": self.highScore,
-      "maxCombo": self.maxCombo,
-      "notes": self.notes,
-      "TP": self.calculateTP()
-    }
-  
-  def toJSON(self):
-    return json.dumps(self.toDict())
-
-  @staticmethod
-  def fromDict(dict):
-    return SongInfo(dict["songName"], difficulties[dict["difficulty"]], ranks[dict["rank"]], dict["score"], dict["highScore"], dict["maxCombo"], dict["notes"])
-
-  @staticmethod
-  def fromJSON(json):
-    return SongInfo.fromDict(json.loads(json))
-
-  def totalNotes(self):
-    '''Returns the total number of notes in the song'''
-    return sum(self.notes.values())
-
-  def calculateTP(self):
-    '''Calculates the Technical Points of the song based on note weighting'''
-    tp = 0
-    for noteType in self.notes:
-      tp += self.notes[noteType] * noteWeights[noteType]
-    return tp / self.totalNotes()
+from song_info import SongInfo
 
 def fetchRanks(path):
   '''Fetches the templates of the different ranks'''
@@ -158,17 +107,16 @@ def strToSongInfo(song: str):
 
   return songInfo, None
 
-def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None):
-  songs.sort(key=lambda x: x["difficultyLvl"])
-  scores = [song['score'] for song in songs]
-  perfects = [song['notes']['Perfect'] for song in songs]
-  greats = [song['notes']['Great'] for song in songs]
-  goods = [song['notes']['Good'] for song in songs]
-  bads = [song['notes']['Bad'] for song in songs]
-  misses = [song['notes']['Miss'] for song in songs]
+def songCountGraph(songs: list[SongInfo], db, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None):
+  scores = [song.score for song in songs]
+  perfects = [song.notes['Perfect'] for song in songs]
+  greats = [song.notes['Great'] for song in songs]
+  goods = [song.notes['Good'] for song in songs]
+  bads = [song.notes['Bad'] for song in songs]
+  misses = [song.notes['Miss'] for song in songs]
   if showMaxCombo:
-    maxCombos = [song['maxCombo'] for song in songs]
-  TP = [song['TP'] for song in songs]
+    maxCombos = [song.maxCombo for song in songs]
+  TP = [song.calculateTP() for song in songs]
 
   figure, axis = plt.subplots(3, 1, figsize=(7 if len(songs) < 7 else len(songs), 9))
 
@@ -179,13 +127,15 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
       formatter = '{:1.2f}K'.format(data_value*0.001)
     return formatter
   
-  def plotDot(x, y, a):
-      axis[a].plot(x, y, 'o', color=difficultyColors[difficulties[songs[i]['difficulty']]])
+  def plotDot(x, y, a, v):
+    axis[a].plot(x, y, 'o', color=difficultyColors[songs[x].difficulty])
+    axis[a].annotate(v, xy=(x, y), xytext=(0, 5*(1 if x % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 1 else 'top', fontsize=8)
+    if not songName:
+      axis[a].annotate(f'{songs[x].getSongName(db)}\n{songs[x].getBandName(db)}', xy=(x, y), xytext=(0, 10*(1 if x % 2 == 0 else -1)), textcoords='offset points', ha='center', va='bottom' if x % 2 == 0 else 'top', fontsize=5)
 
   axis[0].plot(scores, color='silver')
   for i, v in enumerate(scores):
-    axis[0].annotate(f"{v}\n{songs[i]['songName']}", xy=(i, v), xytext=(0, 5*(1 if i % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if i % 2 == 1 else 'top', fontsize=8)
-    plotDot(i, v, 0)
+    plotDot(i, v, 0, v)
 
   axis[0].set_title("Scores")
   axis[0].axes.get_xaxis().set_visible(False)
@@ -248,8 +198,7 @@ def songCountGraph(songs: list[dict], songName: str, difficulty: str = None, tag
   axis[2].axes.get_yaxis().set_major_formatter(PercentFormatter(1))
 
   for i, v in enumerate(TP):
-    axis[2].annotate(f"{'{:,.2%}'.format(v)}\n{songs[i]['songName']}", xy=(i, v), xytext=(0, 5*(1 if i % 2 == 1 else -1)), textcoords='offset points', ha='center', va='bottom' if i % 2 == 1 else 'top', fontsize=8)
-    plotDot(i, v, 2)
+    plotDot(i, v, 2, '{:,.2%}'.format(v))
 
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
   figure.tight_layout()

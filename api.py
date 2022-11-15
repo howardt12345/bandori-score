@@ -3,7 +3,8 @@ import numpy as np
 import cv2
 import pytesseract
 
-from functions import SongInfo, fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
+from song_info import SongInfo
+from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
 from consts import ranks
 
 class ScoreAPI:

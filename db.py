@@ -6,7 +6,7 @@ import os
 import re
 from bson.objectid import ObjectId
 
-from api import SongInfo
+from song_info import SongInfo
 from bestdori import BestdoriAPI
 from functions import songInfoToStr
 from consts import *

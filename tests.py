@@ -38,5 +38,4 @@ def testImage(path):
 # testImage('testdata/test3.jpg')
 
 db = Database()
-songs = db.get_scores_of_song('211981146941030401', "Neo-Aspect", "Expert", "live")
-songCountGraph(songs, "Neo-Aspect", showMaxCombo=True)
+print(db.bestdori.closestSongName('A DECLARATION OF x x x'))

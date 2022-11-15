@@ -3,10 +3,10 @@ import cv2
 from discord.ext import commands
 import asyncio
 from consts import *
-import json
 from db import Database
 
-from functions import *
+from functions import songInfoToStr, songTemplateFormat, strToSongInfo
+from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
   print(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
@@ -15,12 +15,12 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
-    await ctx.send('Does this not look correct? Edit the song by copying the next message and sending it back:')
-    await ctx.send(f'```{songInfoToStr(oldSong)}```')
+    await ctx.send('Does this score not look correct? Edit the song by copying the next message and sending it back:')
+    await ctx.send(f'{songInfoToStr(oldSong)}')
   else:
     oldSong = SongInfo()
     await ctx.send('Please send the song info in the following format:')
-    await ctx.send(f'```{songTemplateFormat()}```')
+    await ctx.send(f'{songTemplateFormat()}')
 
   # New song to return
   newSong = None
