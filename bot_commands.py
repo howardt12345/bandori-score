@@ -272,7 +272,7 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   # counts.sort(key=lambda x: x['count'], reverse=True)
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
-    msgText += f'`{db.bestdori.closestSongName(count["_id"])}`: {count["count"]}\n'
+    msgText += f'{db.bestdori.closestSongName(count["_id"])}: {count["count"]}\n'
 
   if len(msgText) > 2000:
     buf = StringIO(msgText)
@@ -292,6 +292,6 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
     return
   # Add difficulty level to stats
   songs = [SongInfo.fromDict(x) for x in stats]
-  graphFile = songCountGraph(songs, db, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo, showSongNames=showSongNames, interpolate=interpolate)
+  graphFile = songCountGraph(songs, db.bestdori, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo, showSongNames=showSongNames, interpolate=interpolate)
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   

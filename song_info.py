@@ -1,4 +1,5 @@
 import json
+from bestdori import BestdoriAPI
 from consts import *
 
 class SongInfo:
@@ -53,11 +54,11 @@ class SongInfo:
         tp += self.notes[noteType] * noteWeights[noteType]
     return tp / self.totalNotes()
 
-  def getSongData(self, db):
-    return db.bestdori.getSong(self.songName)
+  def getSongData(self, bd: BestdoriAPI):
+    return bd.getSong(self.songName)
 
-  def getSongName(self, db):
-    return db.bestdori.closestSongName(self.songName)
+  def getSongName(self, bd: BestdoriAPI):
+    return bd.closestSongName(self.songName)
 
-  def getBandName(self, db):
-    return db.bestdori.getSongBand(self.songName)
+  def getBandName(self, bd: BestdoriAPI):
+    return bd.getSongBand(self.songName)
