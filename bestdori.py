@@ -30,13 +30,13 @@ class BestdoriAPI:
     self.server = server
   
   def closestSongName(self, songName):
-    matches = get_close_matches(songName, self.getSongNames(), n=1, cutoff=0.8)
+    matches = get_close_matches(songName, self.getSongNames(), n=1, cutoff=0.5)
     return matches[0] if len(matches) > 0 else None
   
   def getBandName(self, bandId: int):
     bandName = self.bands[str(bandId)]['bandName'][self.server]
-    ballbackBandName = next(band for band in self.bands[str(bandId)]['bandName'] if band is not None)
-    return bandName if bandName is not None else ballbackBandName
+    fallbackBandName = next(band for band in self.bands[str(bandId)]['bandName'] if band is not None)
+    return bandName if bandName is not None else fallbackBandName
 
   def getSongNames(self):
     songNames = []

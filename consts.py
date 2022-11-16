@@ -26,7 +26,7 @@ difficultyColors = {
   'Normal': '#58ef40',
   'Hard': '#f9c234',
   'Expert': '#ff2d31',
-  'Special': '#F12499',
+  'Special': '#ef229c',
 }
 botAliases = {
   'newScores': ['new', 'ns', 'add'],

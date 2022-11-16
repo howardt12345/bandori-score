@@ -58,7 +58,8 @@ class SongInfo:
     return bd.getSong(self.songName)
 
   def getSongName(self, bd: BestdoriAPI):
-    return bd.closestSongName(self.songName)
+    name = bd.closestSongName(self.songName)
+    return name if name else self.songName
 
   def getBandName(self, bd: BestdoriAPI):
     return bd.getSongBand(self.songName)

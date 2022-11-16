@@ -143,7 +143,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   
   def plotDot(x, y, a, v, h):
     axis[a].plot(x, y, 'o', color=difficultyColors[songs[x].difficulty])
-    axis[a].annotate(f"{v}\n{'(Interpolated)' if songs[x].totalNotes() <= 0 else ''}".strip(), xy=(x, y), xytext=(0, 5*(1 if y > h else -1)), textcoords='offset points', ha='center', va='bottom' if y > h else 'top', fontsize=8)
+    axis[a].annotate(f"{v}\n{'(int.)' if songs[x].totalNotes() <= 0 else ''}".strip(), xy=(x, y), xytext=(0, 5*(1 if y > h else -1)), textcoords='offset points', ha='center', va='bottom' if y > h else 'top', fontsize=8)
     if showSongNames:
       axis[a].annotate(f'{songs[x].getSongName(bd)}\n{songs[x].getBandName(bd)}', xy=(x, y), xytext=(0, 10*(1 if y < h else -1)), textcoords='offset points', ha='left' if y < h else 'right', va='bottom' if y < h else 'top', fontsize=6, rotation=90)
 
@@ -221,7 +221,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   closestSongName = bd.closestSongName(songName)
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
   figure.tight_layout()
-  plt.gcf().set_size_inches(7 if len(songs) < 7 else len(songs), 21)
+  plt.gcf().set_size_inches(6 if len(songs) < 12 else len(songs)/2, 21)
   buf = BytesIO()
   plt.savefig(buf, format='png')
   buf.seek(0)

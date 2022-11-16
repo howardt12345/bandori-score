@@ -272,11 +272,12 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   # counts.sort(key=lambda x: x['count'], reverse=True)
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
-    msgText += f'{db.bestdori.closestSongName(count["_id"])}: {count["count"]}\n'
+    name = db.bestdori.closestSongName(count["_id"])
+    msgText += f'{name if name else count["_id"]}: {count["count"]}\n'
 
   if len(msgText) > 2000:
     buf = StringIO(msgText)
-    f = discord.File(buf, filename=f'{user.id}_songs.md')
+    f = discord.File(buf, filename=f'{user.id}_songs.txt')
     await ctx.send(file=f)
   else:
     await ctx.send(msgText)
