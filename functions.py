@@ -6,6 +6,7 @@ from bestdori import BestdoriAPI
 from consts import *
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
+import matplotlib.font_manager as fm
 
 from song_info import SongInfo
 
@@ -111,6 +112,8 @@ def strToSongInfo(song: str):
 def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, difficulty: str = None, tag: str = "", showMaxCombo = False, userName: str = None, showSongNames = False, interpolate = False):
   scores = [song.score for song in songs]
 
+  fprop = fm.FontProperties(fname='NotoSansJP-Regular.otf')
+
   if interpolate:
     highScores = list(filter(lambda hs: hs > 0, [song.highScore for song in songs]))
     scoresSet = set(scores + highScores)
@@ -145,7 +148,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
     axis[a].plot(x, y, 'o', color=difficultyColors[songs[x].difficulty])
     axis[a].annotate(f"{v}\n{'(int.)' if songs[x].totalNotes() <= 0 else ''}".strip(), xy=(x, y), xytext=(0, 5*(1 if y > h else -1)), textcoords='offset points', ha='center', va='bottom' if y > h else 'top', fontsize=8)
     if showSongNames:
-      axis[a].annotate(f'{songs[x].getSongName(bd)}\n{songs[x].getBandName(bd)}', xy=(x, y), xytext=(0, 10*(1 if y < h else -1)), textcoords='offset points', ha='left' if y < h else 'right', va='bottom' if y < h else 'top', fontsize=6, rotation=90)
+      axis[a].annotate(f'{songs[x].getSongName(bd)}\n{songs[x].getBandName(bd)}', xy=(x, y), xytext=(0, 10*(1 if y < h else -1)), textcoords='offset points', ha='left' if y < h else 'right', va='bottom' if y < h else 'top', fontsize=6, rotation=90, fontproperties=fprop)
 
   axis[0].plot(scores, color='silver')
   for i, v in enumerate(scores):
@@ -219,7 +222,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
     plotDot(i, v, 2, '{:,.2%}'.format(v), min_tp + (max(TP) - min_tp) / 2)
 
   closestSongName = bd.closestSongName(songName)
-  figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16)
+  figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16, fontproperties=fprop)
   figure.tight_layout()
   plt.gcf().set_size_inches(6 if len(songs) < 12 else len(songs)/2, 21)
   buf = BytesIO()
