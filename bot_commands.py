@@ -263,7 +263,7 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
       await ctx.send(f"The highest {category[1]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
 
 
-async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = ""):
+async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):
   '''Gets the number of songs in the database'''
   user = ctx.message.author
   counts = db.get_song_counts(str(user.id), difficulty, tag)
@@ -275,11 +275,19 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
     name = db.bestdori.closestSongName(count["_id"])
     msgText += f'{name if name else count["_id"]}: {count["count"]}\n'
 
-  if len(msgText) > 2000:
+  if asFile:
     buf = StringIO(msgText)
     f = discord.File(buf, filename=f'{user.id}_songs.txt')
     await ctx.send(file=f)
   else:
+    if len(msgText) > 2000:
+      lines = msgText.splitlines()
+      msgText = ''
+      for line in lines:
+        if len(msgText) + len(line) > 2000:
+          await ctx.send(msgText)
+          msgText = ''
+        msgText += line + '\n'
     await ctx.send(msgText)
 
 
