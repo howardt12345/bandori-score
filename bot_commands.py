@@ -304,3 +304,11 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
   graphFile = songCountGraph(songs, db.bestdori, songName, difficulty, tag, userName=str(user), showMaxCombo=showMaxCombo, showSongNames=showSongNames, interpolate=interpolate)
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   
+
+async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
+  '''Gets the bestdori song info for a given query'''
+  song = db.bestdori.getSong(query)
+  if song:
+    await ctx.send(f'```json\n{song}```')
+  else:
+    await ctx.send(f'No Bestdori song info found for query "{query}"')

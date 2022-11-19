@@ -3,7 +3,7 @@ ranks = ['SS', 'S', 'A', 'B', 'C', 'D']
 types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
 ratios = [2.115, 2.78, 2.85, 4.37, 3.9]
 # The top and bottom tolerances of the note type bounding box
-tolerances = [(0, -2), (0, 0), (0, 0), (0, 3), (2, 5)]
+tolerances = [(0, -2), (0, 0), (0, 0), (1, 3), (2, 5)]
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
 tags = ['live', 'multilive', 'event']
 tagIcons = ['🎵', '🎤', '🎉']
@@ -26,7 +26,7 @@ difficultyColors = {
   'Normal': '#58ef40',
   'Hard': '#f9c234',
   'Expert': '#ff2d31',
-  'Special': '#ef229c',
+  'Special': '#f0209e',
 }
 botAliases = {
   'newScores': ['new', 'ns', 'add'],
@@ -37,4 +37,5 @@ botAliases = {
   'getHighest': ['highest', 'best'],
   'listSongs': ['list', 'songs', 'ls'],
   'getSongStats': ['stats', 'songStats'],
+  'bestdoriGet': ['bestdori', 'bd', 'bdGet']
 }

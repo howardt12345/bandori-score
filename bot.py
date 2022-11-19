@@ -67,4 +67,10 @@ async def getSongStats(ctx: commands.Context, songName: str = None, difficulty: 
   msgLog(ctx)
   await bot_commands.getSongStats(db, ctx, songName, difficulty, tag, matchExact, showMaxCombo, showSongNames, interpolate)
 
+
+@bot.command(aliases=botAliases['bestdoriGet'])
+async def bestdoriGet(ctx: commands.Context, *, query: str = ""):
+  msgLog(ctx)
+  await bot_commands.bestdoriGet(db, ctx, query)
+
 bot.run(TOKEN)

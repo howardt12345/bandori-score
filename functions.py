@@ -135,7 +135,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
     maxCombos = [song.maxCombo for song in songs]
   TP = [song.calculateTP() for song in songs]
 
-  figure, axis = plt.subplots(3, 1, figsize=(6 if len(songs) < 12 else len(songs)/2, 9))
+  figure, axis = plt.subplots(3, 1, figsize=(len(songs)/1.5, 9))
 
   def format_number(data_value, indx):
     if data_value >= 1_000_000:
@@ -224,7 +224,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   closestSongName = bd.closestSongName(songName)
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16, fontproperties=fprop)
   figure.tight_layout()
-  plt.gcf().set_size_inches(6 if len(songs) < 12 else len(songs)/2, 21)
+  plt.gcf().set_size_inches(len(songs)/1.5, 21)
   buf = BytesIO()
   plt.savefig(buf, format='png')
   buf.seek(0)
