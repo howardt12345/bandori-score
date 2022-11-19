@@ -37,5 +37,6 @@ botAliases = {
   'getHighest': ['highest', 'best'],
   'listSongs': ['list', 'songs', 'ls'],
   'getSongStats': ['stats', 'songStats'],
+  'getRecent': ['recent', 'recentScores'],
   'bestdoriGet': ['bestdori', 'bd', 'bdGet']
 }

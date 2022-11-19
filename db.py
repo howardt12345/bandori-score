@@ -147,6 +147,15 @@ class Database:
     self.log(userId, f"GET: User {userId} got song counts")
     return list(song_counts)
 
+  
+  def get_recent_songs(self, userId: str, limit: int, tag: str = ""):
+    q = {}
+    if tag and tag in tags:
+      q['tag'] = tags.index(tag)
+    recent_songs = self.db[userId]['songs'].find(q).sort('_id', DESCENDING).limit(limit)
+    self.log(userId, f"GET: User {userId} got recent songs")
+    return list(recent_songs)
+
 
   def log(self, userId: str, message: str, songId: str = ""):
     self.db[userId]['log'].insert_one({

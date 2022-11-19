@@ -25,17 +25,15 @@ def testImage(path):
   '''Test on a single image'''
   image = cv2.imread(path)
 
-  scoreAPI = ScoreAPI()
+  scoreAPI = ScoreAPI(draw=True)
   song = scoreAPI.getSongInfo(image)
 
   print("---")
-  print(song.toJSON())  
-  print(song.totalNotes())
-  print(song.calculateTP())
+  print(songInfoToStr(song))
+
+  plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+  plt.show()
 
 
 # testDir('live')
-# testImage('testdata/test3.jpg')
-
-db = Database()
-print(db.bestdori.closestSongName('A DECLARATION OF x x x'))
+testImage('testdata/lfUbJ1Kf0v0IJlqVTMYxa7TX2OryY4.png')

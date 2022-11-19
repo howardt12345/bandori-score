@@ -305,6 +305,18 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str, diffi
   await ctx.send(f"Stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}", file=discord.File(graphFile, filename=f'{user.id} {songName} {difficulty} {tag}.png'))
   
 
+async def getRecent(db: Database, ctx: commands.Context, limit: int, tag: str = ""):
+  '''Gets the most recent songs added to the database'''
+  user = ctx.message.author
+  songs = db.get_recent_songs(str(user.id), limit, tag)
+  if len(songs) == 0:
+    await ctx.send(f'No recent songs found')
+    return
+  await ctx.send(f"Your {limit} most recent song(s){f' with tag {tag}' if tag else ''}:")
+  for song in songs:
+    await ctx.send(db.songInfoMsg(song))
+
+
 async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
   '''Gets the bestdori song info for a given query'''
   song = db.bestdori.getSong(query)
