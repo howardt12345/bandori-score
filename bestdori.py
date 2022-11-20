@@ -3,22 +3,23 @@ from difflib import get_close_matches
 
 SONGS_URL = 'https://bestdori.com/api/songs/all.5.json'
 BANDS_URL = 'https://bestdori.com/api/bands/all.1.json'
-headers = {
-  'authority': 'bestdori.com',
-  'method': 'GET',
-  'path': '/api/songs/all.5.json',
-  'scheme': 'https',
-  'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.42'
-}
+def headers(path: str): 
+  return {
+    'authority': 'bestdori.com',
+    'method': 'GET',
+    'path': path,
+    'scheme': 'https',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.42'
+  }
 
 def getSongs():
-  return getJson(SONGS_URL)
+  return getJson(SONGS_URL, SONGS_URL.split('.com/')[1])
     
 def getBands():
-  return getJson(BANDS_URL)
+  return getJson(BANDS_URL, BANDS_URL.split('.com/')[1])
 
-def getJson(url: str):
-  request = urllib.request.Request(url, headers=headers)
+def getJson(url: str, path: str):
+  request = urllib.request.Request(url, headers=headers(path))
   with urllib.request.urlopen(request) as response:
     data = json.loads(response.read())
     return data
@@ -63,5 +64,5 @@ class BestdoriAPI:
     return song['difficulty'][str(difficulty)]['playLevel']
 
   def getDifficultyFromSongName(self, songName, difficulty: int):
-    song = self.findSongFromSongName(songName)
+    song = self.getSong(songName)
     return self.getDifficulty(song, difficulty)

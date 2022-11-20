@@ -62,9 +62,13 @@ class Database:
 
 
   def get_song(self, userId: str, songId: str):
-    song = self.db[userId]['songs'].find_one({'_id': ObjectId(songId)})
-    self.log(userId, f"GET: User {userId} got song with ID {songId}")
-    return song
+    try: 
+      song = self.db[userId]['songs'].find_one({'_id': ObjectId(songId)})
+      self.log(userId, f"GET: User {userId} got song with ID {songId}")
+      return song
+    except Exception as e:
+      self.log(userId, f"GET: User {userId} tried to get song with ID {songId} but failed")
+      return None
 
 
   def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = "", matchExact=False):

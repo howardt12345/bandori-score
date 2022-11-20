@@ -17,6 +17,7 @@ from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighes
 from song_info import SongInfo
 from db import Database
 from consts import tags, highest
+from bot_help import getCommandHelp
 
 async def newScores(
   scoreAPI: ScoreAPI, 
@@ -103,6 +104,7 @@ async def newScores(
         msgText = f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`'
         msgText += f'\nid: `{id}`'
         await ctx.send(msgText)
+        await ctx.send(f'{id}')
       elif res == -1:
         await ctx.send('Song score already exists in database')
       else:
@@ -168,6 +170,9 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
 
   # Fetch song info of id
   score = db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
   msgText = 'Are you sure you want to delete this score?\n**THIS ACTION CANNOT BE UNDONE**\n'
   msgText += db.songInfoMsg(score)
   msgText += 'React with ✅ to confirm deletion\n'
@@ -272,8 +277,9 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   # counts.sort(key=lambda x: x['count'], reverse=True)
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
   for count in counts:
-    name = db.bestdori.closestSongName(count["_id"])
-    msgText += f'{name if name else count["_id"]}: {count["count"]}\n'
+    dbName = count['_id']
+    name = db.bestdori.closestSongName(dbName)
+    msgText += f'{name if name else dbName}{f"(`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
 
   if asFile:
     buf = StringIO(msgText)
