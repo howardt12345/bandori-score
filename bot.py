@@ -85,6 +85,11 @@ async def help(ctx: commands.Context, command: str = ""):
   msgLog(ctx)
   await bot_commands.help(ctx, command)
 
+@bot.command(aliases=commandAliases['aboutTP'])
+async def aboutTP(ctx: commands.Context):
+  msgLog(ctx)
+  await bot_commands.aboutTP(ctx)
+
 # Admin commands
 
 @bot.command()

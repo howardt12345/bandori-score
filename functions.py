@@ -281,3 +281,10 @@ def emptyTemplate():
   for key in types:
     songStr += f"- {key}: \n"
   return songStr
+
+def getAboutTP():
+  msg = "Technical points (TP) is a Cytus term for the measure of the overall accuracy of an individual play. It is calculated based on note timing and describes how far on average a player deviates from hitting the note at its exact timing."
+  msg += "\n\nThe TP calculated by this program is calculated by giving each note type the following weighting:"
+  for note in noteWeights:
+    msg += f"\n  - {note}: {int(noteWeights[note]*100)}%"
+  return msg

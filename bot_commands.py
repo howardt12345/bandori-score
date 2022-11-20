@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songCountGraph, songInfoToStr
+from functions import songCountGraph, songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -335,3 +335,8 @@ async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
 async def help(ctx: commands.Context, command: str = ""):
   '''Gets the help message'''
   await ctx.send(getCommandHelp(command, ctx.prefix))
+
+
+async def aboutTP(ctx: commands.Context):
+  '''Gets the about message'''
+  await ctx.send(getAboutTP())

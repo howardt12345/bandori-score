@@ -31,7 +31,7 @@ class ScoreAPI:
     if self.draw:
       h, w, _ = self.templates['ranks'][ranks.index(rank)][0].shape
       y, x = np.unravel_index(np.argmax(result), result.shape)
-      cv2.rectangle(image, (x, y), (x+w, y+h), (0, 0, 255), 1)
+      cv2.rectangle(image, (x-1, y-1), (x+w+1, y+h+1), (0, 0, 255), 1)
 
     return rank
 

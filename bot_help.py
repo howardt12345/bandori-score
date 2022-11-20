@@ -11,7 +11,8 @@ commandAliases = {
   'listSongs': ['list', 'songs', 'ls', 'listScores'],
   'getSongStats': ['stats', 'songStats'],
   'getRecent': ['recent', 'recentScores'],
-  'bestdoriGet': ['bestdori', 'bd', 'bdGet']
+  'bestdoriGet': ['bestdori', 'bd', 'bdGet'],
+  'aboutTP': ['TP']
 }
 commandParams = {
   'newScores': {
@@ -171,6 +172,8 @@ commandParams = {
       'required': False,
       'help': 'The command to get help for. If left blank, this will list all commands.'
     }
+  },
+  'aboutTP': {
   }
 }
 commandHelp = {
@@ -214,6 +217,10 @@ commandHelp = {
     'description': 'Gets Bestdori data on a song.',
     'help': 'Gets the Bestdori data of a song name. This searches for the name found on Bestdori.'
   },
+  'aboutTP': {
+    'description': 'Shows information on Technical points (TP).',
+    'help': 'Shows information on Technical points (TP).'
+  }
 }
 
 def getCommandHelp(command, prefix):
@@ -224,17 +231,21 @@ def getCommandHelp(command, prefix):
     return msg + '\nUse `$help` command for more info on a command.'
   else:
     if command in commandHelp:
-      msg = f'`{prefix}{"|".join([command] + commandAliases[command])}`\n\n{commandHelp[command]["help"]}\n\nArguments:'
+      msg = f'`{prefix}{"|".join([command] + commandAliases[command])}`\n\n{commandHelp[command]["help"]}'
       cmdParams = commandParams[command]
-      for cmd in cmdParams:
-        msg += f'\n`{cmd}`: {cmdParams[cmd]["type"].__name__}'
-        msg += f'\n   {cmdParams[cmd]["help"]}'
-        if 'required' in cmdParams[cmd]:
-          msg += f'\n - Required: {"yes" if cmdParams[cmd]["required"] else "no"}'
-        if 'default' in cmdParams[cmd]:
-          msg += f'\n - Default: {cmdParams[cmd]["default"]}'
-        if 'allowed' in cmdParams[cmd]:
-          msg += f'\n - Allowed: `{"`, `".join(cmdParams[cmd]["allowed"])}`'
+      if cmdParams and cmdParams != {}:
+        msg += "\n\nArguments:"
+        for cmd in cmdParams:
+          msg += f'\n`{cmd}`: {cmdParams[cmd]["type"].__name__}'
+          msg += f'\n   {cmdParams[cmd]["help"]}'
+          if 'required' in cmdParams[cmd]:
+            msg += f'\n - Required: {"yes" if cmdParams[cmd]["required"] else "no"}'
+          if 'default' in cmdParams[cmd]:
+            msg += f'\n - Default: {cmdParams[cmd]["default"]}'
+          if 'allowed' in cmdParams[cmd]:
+            msg += f'\n - Allowed: `{"`, `".join(cmdParams[cmd]["allowed"])}`'
+      else :
+        msg += "\n\nThis command has no arguments."
       return msg + ''
     else:
       return f'`{command}` is not a valid command.'
