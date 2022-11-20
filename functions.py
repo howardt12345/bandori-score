@@ -7,6 +7,7 @@ from consts import *
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
 import matplotlib.font_manager as fm
+from shapely.geometry import LineString
 
 from song_info import SongInfo
 
@@ -230,6 +231,32 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   buf.seek(0)
   plt.close()
   return buf
+
+def calculateImgDimensions(width, height):
+  if width / height < 16 / 9:
+    w = width
+    h = int(w * 9 / 16)
+  else:
+    w = width
+    h = height
+
+  x = np.arange(450, 3000, 1)
+  y = 248.515 * np.log(0.413359 * x - 179.201) - 581.131
+  y2 = h/w * x
+
+  line1 = LineString(np.column_stack((x, y)))
+  line2 = LineString(np.column_stack((x, y2)))
+  intersection = line1.intersection(line2)
+
+  # get the second intersection point
+  p = list(intersection.geoms)[1]
+  return (int(p.x), int(p.x * (height / width)))
+
+def rescaleImage(img):
+  w = int(img.shape[1])
+  h = int(img.shape[0])
+  dim = calculateImgDimensions(w, h)
+  return cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
 
 def songTemplateFormat():
   '''Returns a formatted string of the song template'''

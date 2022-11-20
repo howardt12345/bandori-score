@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songCountGraph, songInfoToStr
+from functions import songCountGraph, songInfoToStr, rescaleImage
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -44,6 +44,8 @@ async def newScores(
     # Get a file that the API can use
     image_np = np.frombuffer(fp.read(), np.uint8)
     img = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
+    # Rescale the image according to its aspect ratio
+    img = rescaleImage(img)
 
     # Get the song info
     output = scoreAPI.getSongInfo(img)
