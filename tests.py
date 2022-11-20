@@ -25,17 +25,16 @@ def testDir(path):
 def testImage(path):
   '''Test on a single image'''
   image = cv2.imread(path)
-  img = rescaleImage(image)
 
   scoreAPI = ScoreAPI(draw=True)
-  song = scoreAPI.getSongInfo(img)
+  song, res = scoreAPI.getSongInfo(image)
 
   print("---")
   print(songInfoToStr(song))
 
-  plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+  plt.imshow(cv2.cvtColor(res, cv2.COLOR_BGR2RGB))
   plt.show()
 
 
 # testDir('live')
-testImage('testdata/ipad/IMG_1358.png')
+testImage('testdata/ipad/IMG_0990.png')

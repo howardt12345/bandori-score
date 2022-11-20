@@ -4,7 +4,7 @@ import cv2
 import pytesseract
 
 from song_info import SongInfo
-from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo
+from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, rescaleImage
 from consts import ranks
 
 class ScoreAPI:
@@ -161,19 +161,22 @@ class ScoreAPI:
 
   def getSongInfo(self, image):
     '''Gets the song information from an image'''
+    # Rescale the image according to its aspect ratio
+    img = rescaleImage(image)
+
     # Get the song name and difficulty
-    song, difficulty = self.getSong(image)
+    song, difficulty = self.getSong(img)
     # Get the score rank
-    rank = self.getRank(image)
+    rank = self.getRank(img)
     # Get the score and high score
-    score, highScore = self.getScore(image)
+    score, highScore = self.getScore(img)
     # Get the max combo
-    maxCombo = self.getMaxCombo(image)
+    maxCombo = self.getMaxCombo(img)
     # Get the note type scores
-    notes = self.getNotes(image)
+    notes = self.getNotes(img)
 
     songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes)
-    return songInfo
+    return songInfo, img
 
   def basicOutput(self, image):
     '''Returns the result of the song information in a basic format'''

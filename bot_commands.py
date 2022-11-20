@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songCountGraph, songInfoToStr, rescaleImage
+from functions import songCountGraph, songInfoToStr
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -44,11 +44,9 @@ async def newScores(
     # Get a file that the API can use
     image_np = np.frombuffer(fp.read(), np.uint8)
     img = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
-    # Rescale the image according to its aspect ratio
-    img = rescaleImage(img)
 
     # Get the song info
-    output = scoreAPI.getSongInfo(img)
+    output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
 
     # Display the song info to the user and wait for a response
@@ -60,7 +58,7 @@ async def newScores(
     msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'
-    message = await ctx.send(msgText, file=discord.File(BytesIO(cv2.imencode('.jpg', img)[1]), filename=file.filename, spoiler=file.is_spoiler()))
+    message = await ctx.send(msgText, file=discord.File(BytesIO(cv2.imencode('.jpg', res)[1]), filename=file.filename, spoiler=file.is_spoiler()))
 
     await message.add_reaction('✅')
     await message.add_reaction('☑️')
