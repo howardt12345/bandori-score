@@ -28,15 +28,3 @@ difficultyColors = {
   'Expert': '#ff2d31',
   'Special': '#f0209e',
 }
-botAliases = {
-  'newScores': ['new', 'ns', 'add'],
-  'getScores': ['get', 'getScore', 'getSong', 'getSongs'],
-  'editScore': ['edit', 'editSong'],
-  'deleteScore': ['delete', 'deleteSong'],
-  'manualInput': ['input'],
-  'getHighest': ['highest', 'best'],
-  'listSongs': ['list', 'songs', 'ls'],
-  'getSongStats': ['stats', 'songStats'],
-  'getRecent': ['recent', 'recentScores'],
-  'bestdoriGet': ['bestdori', 'bd', 'bdGet']
-}

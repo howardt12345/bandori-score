@@ -330,3 +330,8 @@ async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
     await ctx.send(f'```json\n{song}```')
   else:
     await ctx.send(f'No Bestdori song info found for query "{query}"')
+
+
+async def help(ctx: commands.Context, command: str = ""):
+  '''Gets the help message'''
+  await ctx.send(getCommandHelp(command, ctx.prefix))

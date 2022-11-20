@@ -1,3 +1,4 @@
 testdata/
 *.pyc
 .env
+logs/
