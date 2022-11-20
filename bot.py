@@ -2,6 +2,7 @@
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import has_permissions
 
 from dotenv import load_dotenv
 import os
@@ -9,6 +10,7 @@ import os
 from api import ScoreAPI
 from db import Database
 import bot_commands
+import bot_commands_admin
 from bot_util_functions import msgLog
 from bot_help import *
 
@@ -16,7 +18,8 @@ import sys
 
 # Get token from .env
 load_dotenv()
-TOKEN = os.getenv('TOKEN_DEV' if len(sys.argv) > 1 and sys.argv[1] == 'dev' else 'TOKEN')
+dev = len(sys.argv) > 1 and sys.argv[1] == 'dev'
+TOKEN = os.getenv('TOKEN_DEV' if dev else 'TOKEN')
 
 # Create bot
 intents = discord.Intents.default()
@@ -81,5 +84,13 @@ async def bestdoriGet(ctx: commands.Context, *, query: str = ""):
 async def help(ctx: commands.Context, command: str = ""):
   msgLog(ctx)
   await bot_commands.help(ctx, command)
+
+# Admin commands
+
+@bot.command()
+@has_permissions(administrator=True)
+async def version(ctx: commands.Context, version: str, ping: bool = False):
+  msgLog(ctx)
+  await bot_commands_admin.version(ctx, version, ping)
 
 bot.run(TOKEN)

@@ -279,7 +279,7 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
   for count in counts:
     dbName = count['_id']
     name = db.bestdori.closestSongName(dbName)
-    msgText += f'{name if name else dbName}{f"(`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
+    msgText += f'{name if name else dbName} {f"(`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
 
   if asFile:
     buf = StringIO(msgText)

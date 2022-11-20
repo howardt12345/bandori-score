@@ -1,0 +1,3 @@
+v0.1b: First private beta
+
+Use $help to list all the availble commands. 
