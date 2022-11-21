@@ -35,6 +35,8 @@ class Database:
       ('notes.Bad', ASCENDING),
       ('notes.Miss', ASCENDING),
       ('TP', DESCENDING),
+      ('fast', ASCENDING),
+      ('slow', ASCENDING),
     ], unique=True, name="Ensure unique")
 
     songDict = song.toDict()
@@ -96,7 +98,7 @@ class Database:
     if query == 'fastSlow':
       q['fast'] = {'$exists': True}
       q['slow'] = {'$exists': True}
-      songs = self.db[userId]['songs'].find(q).sort([('fast', ASCENDING), ('slow', ASCENDING)]).limit(1)
+      songs = self.db[userId]['songs'].find(q).sort('notes.Great', ASCENDING).limit(1)
     else: 
       songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
     self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
@@ -118,7 +120,40 @@ class Database:
         q1 = q.copy()
         q1['fast'] = {'$exists': True}
         q1['slow'] = {'$exists': True}
-        songs = self.db[userId]['songs'].find(q1).sort([('fast', ASCENDING), ('slow', ASCENDING)]).limit(1)
+        songs = self.db[userId]['songs'].aggregate([
+          {'$match': q1},
+          {'$project': {
+            'songName': 1,
+            'difficulty': 1,
+            'tag': 1,
+            'rank': 1,
+            'score': 1,
+            'highScore': 1,
+            'maxCombo': 1,
+            'notes': 1,
+            'TP': 1,
+            'fast': 1, 
+            'slow': 1, 
+            'fastSlow': {'$add': ['$fast', '$slow'] }
+          }},
+          {'$group': {
+            '_id': '$_id',
+            'songName': {'$first': '$songName'},
+            'difficulty': {'$first': '$difficulty'},
+            'tag': {'$first': '$tag'},
+            'rank': {'$first': '$rank'},
+            'score': {'$first': '$score'},
+            'highScore': {'$first': '$highScore'},
+            'maxCombo': {'$first': '$maxCombo'},
+            'notes': {'$first': '$notes'},
+            'TP': {'$first': '$TP'},
+            'fast': {'$first': '$fast'},
+            'slow': {'$first': '$slow'},
+            'fastSlow': {'$first': '$fastSlow'},
+          }},
+          {'$sort': {'fastSlow': ASCENDING}},
+          {'$limit': 1}
+        ])
         lst = list(songs)
         res.extend(lst if len(lst) > 0 else [None])
       else:

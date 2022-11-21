@@ -21,7 +21,7 @@ highestDict = {
   'maxCombo': ('Max Combo', 'DESC', False),
   'notes.Perfect': ('Number of Perfects', 'DESC', False),
   'TP': ('Technical Points', 'DESC', False),
-  'fastSlow': ('Fast/Slow', 'DESC', False),
+  'fastSlow': ('Fast/Slow', 'ASC', False),
 }
 difficultyColors = {
   'Easy': '#3376f7',

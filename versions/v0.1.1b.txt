@@ -1,0 +1,8 @@
+v0.1.1b Private beta
+
+Changelog:
+- Gives Bestdori link when using `$bestdoriGet`
+- `$getHighest` is renamed to `$getBest`
+- Adds support for fast/slow score screenshots
+  - Adds fast/slow as a criteria in the score analysis
+  - Adds best fast/slow as a category in `$getBest`
