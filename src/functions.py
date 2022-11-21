@@ -108,7 +108,7 @@ def strToSongInfo(song: str):
   songInfo.maxCombo = int(maxCombo) if maxCombo.isdecimal() else -1
   # Get note scores
   notes = {}
-  for i in range(6, len(lines)):
+  for i in range(6, 6 + len(types)):
     note = lines[i].split(': ')[0][2:]
     if note not in types:
       return None, f"Invalid note type: {note}. Must be in one of {types}"
@@ -119,6 +119,12 @@ def strToSongInfo(song: str):
   if not all(note in notes for note in types):
     return None, f"Missing note types. Must have all of {types}"
   songInfo.notes = notes
+  # Get fast and slow
+  if len(lines) > 6 + len(types):
+    fast = lines[6 + len(types)].split(': ')[1]
+    songInfo.fast = int(fast) if fast.isdecimal() else -1
+    slow = lines[7 + len(types)].split(': ')[1]
+    songInfo.slow = int(slow) if slow.isdecimal() else -1
 
   return songInfo, None
 
