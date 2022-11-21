@@ -125,8 +125,8 @@ def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict, tag:
   res = {}
   user = ctx.message.author
   highestScores = db.get_highest_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
-  for x, category in enumerate(highest):
-    id, _, op, _ = category
+  for x, (id, value) in enumerate(highestDict.items()):
+    _, op, _ = value
     if id == "notes.Perfect":
       res[id] = (song['notes']['Perfect'], highestScores[x]['notes']['Perfect'] if len(highestScores) > 0 else 0)
     else:
@@ -146,8 +146,8 @@ async def printSongCompare(ctx: commands.Context, highestScores: dict):
       else:
         return score
     msg = 'Score analysis:\n'
-    for x, category in enumerate(highest):
-      id, name, op, _ = category
+    for _, (id, value) in enumerate(highestDict.items()):
+      name, op, _ = value
       score, highestScore = highestScores[id]
       fscore, fhighestScore = format(id, score), format(id, highestScore)
       if score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True:

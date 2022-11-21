@@ -77,6 +77,9 @@ def songInfoToStr(song: SongInfo):
   songStr += f"Note scores:\n"
   for key in song.notes:
     songStr += f"- {key}: {song.notes[key] if song.notes[key] >= 0 else '?'}\n"
+  if song.hasFastSlow():
+    songStr += f"Fast: {song.fast}\n"
+    songStr += f"Slow: {song.slow}\n"
   return songStr
 
 def strToSongInfo(song: str):

@@ -4,7 +4,18 @@ from consts import *
 
 class SongInfo:
   '''Object representing a song's info'''
-  def __init__(self, songName="", difficulty="", rank="", score=-1, highScore=-1, maxCombo=-1, notes={'Perfect': -1, 'Great': -1, 'Good': -1, 'Bad': -1, 'Miss': -1}):
+  def __init__(
+    self, 
+    songName="", 
+    difficulty="", 
+    rank="", 
+    score=-1, 
+    highScore=-1, 
+    maxCombo=-1, 
+    notes={'Perfect': -1, 'Great': -1, 'Good': -1, 'Bad': -1, 'Miss': -1},
+    fast=-1,
+    slow=-1
+  ):
     self.songName = songName
     self.difficulty = difficulty
     self.rank = rank
@@ -12,6 +23,8 @@ class SongInfo:
     self.highScore = highScore
     self.maxCombo = maxCombo
     self.notes = notes
+    self.fast = fast
+    self.slow = slow
 
   def __str__(self):
     return f"{self.songName} - {self.difficulty}\nRank: {self.rank}, Score: {self.score}, High Score: {self.highScore}, Max Combo: {self.maxCombo}\n{self.notes}"
@@ -20,7 +33,7 @@ class SongInfo:
     return self.__str__()
 
   def toDict(self):
-    return {
+    d = {
       "songName": self.songName,
       "difficulty": difficulties.index(self.difficulty),
       "rank": ranks.index(self.rank),
@@ -28,15 +41,29 @@ class SongInfo:
       "highScore": self.highScore,
       "maxCombo": self.maxCombo,
       "notes": self.notes,
-      "TP": self.calculateTP()
+      "TP": self.calculateTP(),
     }
+    if self.hasFastSlow():
+      d["fast"] = self.fast
+      d["slow"] = self.slow
+    return d
   
   def toJSON(self):
     return json.dumps(self.toDict())
 
   @staticmethod
   def fromDict(dict):
-    return SongInfo(dict["songName"], difficulties[dict["difficulty"]], ranks[dict["rank"]], dict["score"], dict["highScore"], dict["maxCombo"], dict["notes"])
+    return SongInfo(
+      dict["songName"], 
+      difficulties[dict["difficulty"]], 
+      ranks[dict["rank"]], 
+      dict["score"], 
+      dict["highScore"], 
+      dict["maxCombo"], 
+      dict["notes"],
+      dict["fast"] if "fast" in dict else -1,
+      dict["slow"] if "slow" in dict else -1
+    )
 
   @staticmethod
   def fromJSON(json):
@@ -53,6 +80,9 @@ class SongInfo:
       if self.notes[noteType] != -1:
         tp += self.notes[noteType] * noteWeights[noteType]
     return tp / self.totalNotes()
+
+  def hasFastSlow(self):
+    return self.fast != -1 and self.slow != -1
 
   def getSongData(self, bd: BestdoriAPI):
     _, song, _ = bd.getSong(self.songName)

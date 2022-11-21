@@ -15,13 +15,14 @@ noteWeights = {
   'Bad': 0.25,
   'Miss': 0
 }
-highest = [
-  ('score', 'Score', 'DESC', False),
-  ('rank', 'Rank', 'ASC', True),
-  ('maxCombo', 'Max Combo', 'DESC', False),
-  ('notes.Perfect', 'Number of Perfects', 'DESC', False),
-  ('TP', 'Technical Points', 'DESC', False),
-]
+highestDict = {
+  'score': ('Score', 'DESC', False),
+  'rank': ('Rank', 'ASC', True),
+  'maxCombo': ('Max Combo', 'DESC', False),
+  'notes.Perfect': ('Number of Perfects', 'DESC', False),
+  'TP': ('Technical Points', 'DESC', False),
+  'fastSlow': ('Fast/Slow', 'DESC', False),
+}
 difficultyColors = {
   'Easy': '#3376f7',
   'Normal': '#58ef40',

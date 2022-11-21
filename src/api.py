@@ -164,7 +164,34 @@ class ScoreAPI:
     return int(data) if data.isdecimal() else 0, index == 1
 
   def getFastSlow(self, image):
-    pass
+    '''Gets the fast and slow count of the image result'''
+    # Iterates through the fast/slow tuple templates
+    res = []
+    results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), x) for x, template in enumerate(self.templates['fastSlow'])]
+    for result, x in results:
+      h, w, _ = self.templates['fastSlow'][x].shape
+      y, x = np.unravel_index(np.argmax(result), result.shape)
+
+      # Get the bounding box where the fast/slow score is
+      tl_x, tl_y = x+w, y
+      br_x, br_y = x+(w*2), y+h
+
+      # Draw the rectangle of the bounding box if draw is enabled
+      if self.draw:
+        cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
+
+      # Make image black and white for OCR
+      image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+      (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
+
+      # Read the fast/slow score from the image
+      ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
+      data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+      data = data.strip()
+      res.append(int(data) if data.isdecimal() else -1)
+
+    # Returns the result in a list. The list should be of the same length as the tuple of templates
+    return res
 
   def getSongInfo(self, image):
     '''Gets the song information from an image'''
@@ -181,27 +208,13 @@ class ScoreAPI:
     maxCombo, fastSlow = self.getMaxCombo(img)
     if fastSlow:
       fast, slow = self.getFastSlow(img)
+    else:
+      fast, slow = -1, -1
     # Get the note type scores
     notes = self.getNotes(img)
 
-    songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes)
+    songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes, fast, slow)
     return songInfo, img
-
-  def basicOutput(self, image):
-    '''Returns the result of the song information in a basic format'''
-    # Get the song name and difficulty
-    song, difficulty = self.getSong(image)
-    # Get the score rank
-    rank = self.getRank(image)
-    # Get the score and high score
-    score, highScore = self.getScore(image)
-    # Get the max combo
-    maxCombo, fastSlow = self.getMaxCombo(image)
-    # Get the note type scores
-    notes = self.getNotes(image)
-
-    # Return the results in a formatted string
-    return f"({difficulty}) {song}\nRank: {rank}, Score: {score}, High Score: {highScore}, Max Combo: {maxCombo}\n{notes}"
 
   def jsonOutput(self, image):
     '''Returns the result of the song information in a json format'''

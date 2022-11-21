@@ -16,7 +16,7 @@ from functions import songCountGraph, songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithHighest, printSongCompare
 from song_info import SongInfo
 from db import Database
-from consts import tags, highest
+from consts import tags, highestDict
 from bot_help import getCommandHelp
 
 async def newScores(
@@ -249,12 +249,12 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
 async def getHighest(db: Database, ctx: commands.Context, songName: str, difficulty: str, tag: str = "", query: str = ""):
   '''Gets the highest score of a song given a song nam, difficulty, and tag'''
 
-  if (query and query not in [x[0] for x in highest]):
+  if (query and query not in highestDict.keys()):
     await ctx.send(f'''Invalid query: "{query}" for song {songName} and difficulty {difficulty}.
-    \nSong name and difficulty must be provided and query must be one of: {[x[0] for x in highest]}''')
+    \nSong name and difficulty must be provided and query must be one of: {highestDict.keys()}''')
     return
   user = ctx.message.author
-  scores = db.get_song_with_highest(str(user.id), songName, difficulty, tag, query)[0] if query else db.get_highest_songs(str(user.id), songName, difficulty, tag) 
+  scores = db.get_song_with_highest(str(user.id), songName, difficulty, tag, query, highestDict[query][1])[0] if query else db.get_highest_songs(str(user.id), songName, difficulty, tag) 
   if len(scores) == 0:
     await ctx.send(f'No highest {query} entry for "{songName}" ({difficulty})')
     return
@@ -262,10 +262,10 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
     await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
     await ctx.send(db.songInfoMsg(scores))
   elif isinstance(scores, list):
-    for x, category in enumerate(highest):
-      if category[3]:
+    for x, (_, value) in enumerate(highestDict.items()):
+      if value[2]:
         continue
-      await ctx.send(f"The highest {category[1]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
+      await ctx.send(f"The highest {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
 
 
 async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):

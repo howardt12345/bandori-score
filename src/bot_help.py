@@ -81,8 +81,8 @@ commandParams = {
     'query': {
       'type': str,
       'required': False,
-      'allowed': [h[0] for h in highest],
-      'help': f'The query to get the highest for. This allows you to get the highest for a specific query instead of all of the available values. By default, the following are all listed: {[h[1] for h in highest]}'
+      'allowed': highestDict.keys(),
+      'help': f'The query to get the highest for. This allows you to get the highest for a specific query instead of all of the available values. By default, the following are all listed: {[h[0] for h in highestDict.values()]}'
     }
   },
   'listSongs': {
@@ -199,7 +199,7 @@ commandHelp = {
   },
   'getHighest': {
     'description': 'Gets the highest scores',
-    'help': f'Gets your highest scores of the following criteria: {[h[1] for h in highest]}.'
+    'help': f'Gets your highest scores of the following criteria: {[h[0] for h in highestDict.values()]}.'
   },
   'listSongs': {
     'description': 'Lists all of the songs in your database.',

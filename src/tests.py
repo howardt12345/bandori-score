@@ -21,8 +21,9 @@ def testDir(path):
   scoreAPI = ScoreAPI()
 
   for image in images:
+    song, res = scoreAPI.getSongInfo(image)
     print("---")
-    print(scoreAPI.basicOutput(image))
+    print(songInfoToStr(song))
 
 def testImage(path):
   '''Test on a single image'''
@@ -40,3 +41,4 @@ def testImage(path):
 
 # testDir('live')
 testImage(f'{sys.path[0]} + /../testdata/Screenshot_20221121-004050_BanG Dream!.png')
+testImage(f'{sys.path[0]} + /../testdata/Screenshot_20220929-110500_BanG Dream!.jpg')

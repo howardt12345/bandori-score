@@ -84,7 +84,7 @@ class Database:
     return list(scores)
 
 
-  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, tag: str, query: str):
+  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, tag: str, query: str, order: str):
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
@@ -93,7 +93,7 @@ class Database:
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
 
-    songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING).limit(1)
+    songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
     self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
     return list(songs)
 
@@ -107,8 +107,8 @@ class Database:
       q['tag'] = tags.index(tag)
 
     res = []
-    for category in highest:
-      songs = self.db[userId]['songs'].find(q).sort(category[0], DESCENDING if category[2] == 'DESC' else ASCENDING).limit(1)
+    for _, (key, value) in enumerate(highestDict.items()):
+      songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
       res.extend(list(songs))
 
     self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
