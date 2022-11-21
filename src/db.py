@@ -86,7 +86,7 @@ class Database:
     return list(scores)
 
 
-  def get_song_with_highest(self, userId: str, songName: str, difficulty: str, tag: str, query: str, order: str):
+  def get_song_with_best(self, userId: str, songName: str, difficulty: str, tag: str, query: str, order: str):
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
@@ -99,11 +99,11 @@ class Database:
       songs = self.get_fast_slow(userId, q)
     else: 
       songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
-    self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
+    self.log(userId, f'GET: User {userId} got best {query} score with query text "{songName}"')
     lst = list(songs)
     return lst if len(lst) > 0 else None
 
-  def get_highest_songs(self, userId: str, songName: str, difficulty: str, tag: str):
+  def get_best_songs(self, userId: str, songName: str, difficulty: str, tag: str):
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
@@ -113,7 +113,7 @@ class Database:
       q['tag'] = tags.index(tag)
 
     res = []
-    for _, (key, value) in enumerate(highestDict.items()):
+    for _, (key, value) in enumerate(bestDict.items()):
       if key == 'fastSlow':
         songs = self.get_fast_slow(userId, q)
         lst = list(songs)
@@ -122,7 +122,7 @@ class Database:
         songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
         res.extend(list(songs))
 
-    self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
+    self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
     return res
 
   def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):

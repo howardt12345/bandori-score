@@ -15,7 +15,7 @@ noteWeights = {
   'Bad': 0.25,
   'Miss': 0
 }
-highestDict = {
+bestDict = {
   'score': ('Score', 'DESC', False),
   'rank': ('Rank', 'ASC', True),
   'maxCombo': ('Max Combo', 'DESC', False),

@@ -7,7 +7,7 @@ commandAliases = {
   'editScore': ['edit', 'editSong'],
   'deleteScore': ['delete', 'deleteSong'],
   'manualInput': ['input'],
-  'getHighest': ['highest', 'best'],
+  'getBest': ['highest', 'best'],
   'listSongs': ['list', 'songs', 'ls', 'listScores'],
   'getSongStats': ['stats', 'songStats'],
   'getRecent': ['recent', 'recentScores'],
@@ -60,29 +60,29 @@ commandParams = {
       'help': 'The tag to apply to the song.'
     }
   },
-  'getHighest': {
+  'getBest': {
     'songName': {
       'type': str,
       'required': False,
-      'help': 'The name of the song to list the highest scores for. This searches for the database representation of the name. Quotes are required if the name contains spaces.'
+      'help': 'The name of the song to list the best scores for. This searches for the database representation of the name. Quotes are required if the name contains spaces.'
     },
     'difficulty': {
       'type': str,
       'allowed': difficulties,
       'required': False,
-      'help': 'The difficulty to list the highest scores for. Lists for all difficulties if not provided.'
+      'help': 'The difficulty to list the best scores for. Lists for all difficulties if not provided.'
     },
     'tag': {
       'type': str,
       'allowed': tags,
       'required': False,
-      'help': 'The tag to list the highest scores for. Lists for all tags if not provided.'
+      'help': 'The tag to list the best scores for. Lists for all tags if not provided.'
     },
     'query': {
       'type': str,
       'required': False,
-      'allowed': highestDict.keys(),
-      'help': f'The query to get the highest for. This allows you to get the highest for a specific query instead of all of the available values. By default, the following are all listed: {[h[0] for h in highestDict.values()]}'
+      'allowed': bestDict.keys(),
+      'help': f'The query to get the best for. This allows you to get the best for a specific query instead of all of the available values. By default, the following are all listed: {[h[0] for h in bestDict.values()]}'
     }
   },
   'listSongs': {
@@ -197,9 +197,9 @@ commandHelp = {
     'description': 'Manually adds a score to your database.',
     'help': 'Manually inputs a score. This is useful if you want to add a score that is not in the database and that you do not have a screenshot for.'
   },
-  'getHighest': {
-    'description': 'Gets the highest scores',
-    'help': f'Gets your highest scores of the following criteria: {[h[0] for h in highestDict.values()]}.'
+  'getBest': {
+    'description': 'Gets the best scores',
+    'help': f'Gets your best scores of the following criteria: {[h[0] for h in bestDict.values()]}.'
   },
   'listSongs': {
     'description': 'Lists all of the songs in your database.',

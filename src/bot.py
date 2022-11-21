@@ -55,10 +55,10 @@ async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   msgLog(ctx)
   await bot_commands.manualInput(bot, db, ctx, defaultTag)
 
-@bot.command(aliases=commandAliases['getHighest'])
-async def getHighest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
+@bot.command(aliases=commandAliases['getBest'])
+async def getBest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
   msgLog(ctx)
-  await bot_commands.getHighest(db, ctx, songName, difficulty, tag, query)
+  await bot_commands.getBest(db, ctx, songName, difficulty, tag, query)
 
 @bot.command(aliases=commandAliases['listSongs'])
 async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False):

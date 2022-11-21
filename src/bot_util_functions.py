@@ -120,37 +120,37 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   return tag
 
-def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict, tag: str):
-  '''Compare the song with the highest rated songs in the database'''
+def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: str):
+  '''Compare the song with the best rated songs in the database'''
   res = {}
   user = ctx.message.author
-  highestScores = db.get_highest_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
-  for x, (id, value) in enumerate(highestDict.items()):
+  bestScores = db.get_best_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
+  for x, (id, value) in enumerate(bestDict.items()):
     _, op, _ = value
     if id == "notes.Perfect":
       score = song['notes']['Perfect']
-      highestScore = highestScores[x]['notes']['Perfect'] if len(highestScores) > 0 else 0
-      better = score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True
-      res[id] = (score, highestScore, better)
+      bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 else 0
+      better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+      res[id] = (score, bestScore, better)
     elif id == "fastSlow":
       if ('fast' in song and 'slow' in song):
-        if (highestScores[x]):
+        if (bestScores[x]):
           score = (song['fast'], song['slow'])
-          highestScore = (highestScores[x]['fast'], highestScores[x]['slow']) if len(highestScores) > 0 else (-1, -1)
-          better = score >= highestScore if op == 'DESC' else score <= highestScore
-          res[id] = (score, highestScore, better)
+          bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 else (-1, -1)
+          better = score >= bestScore if op == 'DESC' else score <= bestScore
+          res[id] = (score, bestScore, better)
         else:
           res[id] = ((song['fast'], song['slow']), (-1, -1), True)
     else:
       score = song[id]
-      highestScore = highestScores[x][id] if len(highestScores) > 0 else 0 if op == 'DESC' else -1
-      better = score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True
-      res[id] = (score, highestScore, better)
+      bestScore = bestScores[x][id] if len(bestScores) > 0 else 0 if op == 'DESC' else -1
+      better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+      res[id] = (score, bestScore, better)
   return res
 
-async def printSongCompare(ctx: commands.Context, highestScores: dict):
-  '''Print the comparison of the song with the highest rated songs in the database'''
-  if highestScores is None:
+async def printSongCompare(ctx: commands.Context, bestScores: dict):
+  '''Print the comparison of the song with the best rated songs in the database'''
+  if bestScores is None:
     await ctx.send('Failed to compare song with other entries')
   else:
     def format(category, score):
@@ -161,14 +161,14 @@ async def printSongCompare(ctx: commands.Context, highestScores: dict):
       else:
         return score
     msg = 'Score analysis:\n'
-    for _, (id, value) in enumerate(highestDict.items()):
-      name, op, _ = value
-      if id in highestScores:
-        score, highestScore, better = highestScores[id]
-        fscore, fhighestScore = format(id, score), format(id, highestScore)
+    for _, (id, value) in enumerate(bestDict.items()):
+      name, _, _ = value
+      if id in bestScores:
+        score, bestScore, better = bestScores[id]
+        fscore, fbestScore = format(id, score), format(id, bestScore)
         if better:
-          msg += f'✅ {name} >= highest ({fscore} >= {fhighestScore})\n'
+          msg += f'✅ {name} >= best ({fscore} >= {fbestScore})\n'
         else:
-          msg += f'❌ {name} < highest ({fscore} < {fhighestScore})\n'
+          msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
     await ctx.send(msg)
   
