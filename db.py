@@ -68,7 +68,7 @@ class Database:
       return song
     except Exception as e:
       self.log(userId, f"GET: User {userId} tried to get song with ID {songId} but failed")
-      return None
+      raise e
 
 
   def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = "", matchExact=False):

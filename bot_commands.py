@@ -128,9 +128,9 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
       scores = db.get_song(str(user.id), query.strip())
     except Exception as e:
       print(e)
-      scores = db.get_scores_of_song(str(user.id), query)
+      scores = db.get_scores_of_song(str(user.id), query.strip())
 
-  if len(scores) == 0:
+  if not scores or len(scores) == 0:
     await ctx.send(f'No scores found for "{query}"')
     return
   if isinstance(scores, dict):
@@ -297,7 +297,7 @@ async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, ta
     await ctx.send(msgText)
 
 
-async def getSongStats(db: Database, ctx: commands.Context, songName: str, difficulty: str = None, tag: str = "", matchExact = False, showMaxCombo = False, showSongNames = False, interpolate = False):
+async def getSongStats(db: Database, ctx: commands.Context, songName: str = "", difficulty: str = None, tag: str = "", matchExact = False, showMaxCombo = False, showSongNames = False, interpolate = False):
   '''Gets the stats of a song given a song name and difficulty'''
   user = ctx.message.author
   await ctx.send(f"Getting stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
