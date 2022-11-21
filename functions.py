@@ -114,6 +114,8 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   scores = [song.score for song in songs]
 
   fprop = fm.FontProperties(fname='NotoSansJP-Regular.otf')
+  chartWidth = max(len(songs)/1.5, 10)
+  chartHeight = 9
 
   if interpolate:
     highScores = list(filter(lambda hs: hs > 0, [song.highScore for song in songs]))
@@ -136,7 +138,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
     maxCombos = [song.maxCombo for song in songs]
   TP = [song.calculateTP() for song in songs]
 
-  figure, axis = plt.subplots(3, 1, figsize=(len(songs)/1.5, 9))
+  figure, axis = plt.subplots(3, 1, figsize=(chartWidth, chartHeight))
 
   def format_number(data_value, indx):
     if data_value >= 1_000_000:
@@ -225,7 +227,7 @@ def songCountGraph(songs: list[SongInfo], bd: BestdoriAPI, songName: str, diffic
   closestSongName = bd.closestSongName(songName)
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16, fontproperties=fprop)
   figure.tight_layout()
-  plt.gcf().set_size_inches(len(songs)/1.5, 21)
+  plt.gcf().set_size_inches(chartWidth, (chartHeight-2)*3)
   buf = BytesIO()
   plt.savefig(buf, format='png')
   buf.seek(0)
