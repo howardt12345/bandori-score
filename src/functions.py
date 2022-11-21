@@ -11,13 +11,15 @@ from shapely.geometry import LineString
 
 from song_info import SongInfo
 
+ASSETS_DIR = '../assets'
+
 def fetchRanks(path):
   '''Fetches the templates of the different ranks'''
   # List of ranks
   imgs = []
   for rank in ranks:
     ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'assets/{path}/rank/{rank}.{ext}')
+    template = cv2.imread(f'{ASSETS_DIR}/{path}/rank/{rank}.{ext}')
     # If the template exists, add it to the list
     if not template is None:
       imgs.append(( template, rank ))
@@ -30,7 +32,7 @@ def fetchNoteTypes(path):
   imgs = []
   for x, type in enumerate(types):
     ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'assets/{path}/score/{type}.{ext}')
+    template = cv2.imread(f'{ASSETS_DIR}/{path}/score/{type}.{ext}')
     if not template is None:
       # If the template exists, add it to the list
       imgs.append(( template, type, ratios[x], tolerances[x] ))
@@ -42,7 +44,7 @@ def fetchDifficulties(path):
   imgs = []
   for difficulty in difficulties:
     ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'assets/{path}/difficulty/{difficulty}.{ext}')
+    template = cv2.imread(f'{ASSETS_DIR}/{path}/difficulty/{difficulty}.{ext}')
     if not template is None:
       # If the template exists, add it to the list
       imgs.append(( template, difficulty ))
@@ -51,12 +53,12 @@ def fetchDifficulties(path):
 def fetchScoreIcon(path):
   '''Fetches the score icon'''
   ext = "png" if path == 'direct' else "jpg"
-  return cv2.imread(f'assets/{path}/ScoreIcon.{ext}')
+  return cv2.imread(f'{ASSETS_DIR}/{path}/ScoreIcon.{ext}')
 
 def fetchMaxCombo(path):
   '''Fetches the max combo template'''
   ext = "png" if path == 'direct' else "jpg"
-  return cv2.imread(f'assets/{path}/Max combo.{ext}')
+  return cv2.imread(f'{ASSETS_DIR}/{path}/Max combo.{ext}')
 
 def songInfoToStr(song: SongInfo):
   '''Converts a SongInfo object to a formatted string'''
