@@ -254,18 +254,22 @@ async def getHighest(db: Database, ctx: commands.Context, songName: str, difficu
     \nSong name and difficulty must be provided and query must be one of: {highestDict.keys()}''')
     return
   user = ctx.message.author
-  scores = db.get_song_with_highest(str(user.id), songName, difficulty, tag, query, highestDict[query][1])[0] if query else db.get_highest_songs(str(user.id), songName, difficulty, tag) 
-  if len(scores) == 0:
-    await ctx.send(f'No highest {query} entry for "{songName}" ({difficulty})')
+  res = db.get_song_with_highest(str(user.id), songName, difficulty, tag, query, highestDict[query][1]) if query else db.get_highest_songs(str(user.id), songName, difficulty, tag)
+  scores = res[0] if res and query else res
+  if not scores or len(scores) == 0:
+    await ctx.send(f'No highest {query} entry for "{songName}" {f"({difficulty})" if difficulty else ""}')
     return
   if isinstance(scores, dict):
-    await ctx.send(f'Found the highest {query} entry for "{songName}" ({difficulty})')
+    await ctx.send(f'Found the highest {query} entry for "{songName}" {f"({difficulty})" if difficulty else ""}')
     await ctx.send(db.songInfoMsg(scores))
   elif isinstance(scores, list):
     for x, (_, value) in enumerate(highestDict.items()):
       if value[2]:
         continue
-      await ctx.send(f"The highest {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
+      if scores[x]:
+        await ctx.send(f"The highest {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}: \n{db.songInfoMsg(scores[x])}")
+      else:
+        await ctx.send(f"No highest {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}")
 
 
 async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):

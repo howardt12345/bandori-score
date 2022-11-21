@@ -93,9 +93,15 @@ class Database:
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
 
-    songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
+    if query == 'fastSlow':
+      q['fast'] = {'$exists': True}
+      q['slow'] = {'$exists': True}
+      songs = self.db[userId]['songs'].find(q).sort([('fast', ASCENDING), ('slow', ASCENDING)]).limit(1)
+    else: 
+      songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
     self.log(userId, f'GET: User {userId} got highest {query} score with query text "{songName}"')
-    return list(songs)
+    lst = list(songs)
+    return lst if len(lst) > 0 else None
 
   def get_highest_songs(self, userId: str, songName: str, difficulty: str, tag: str):
     q = {}
@@ -108,8 +114,16 @@ class Database:
 
     res = []
     for _, (key, value) in enumerate(highestDict.items()):
-      songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
-      res.extend(list(songs))
+      if key == 'fastSlow':
+        q1 = q.copy()
+        q1['fast'] = {'$exists': True}
+        q1['slow'] = {'$exists': True}
+        songs = self.db[userId]['songs'].find(q1).sort([('fast', ASCENDING), ('slow', ASCENDING)]).limit(1)
+        lst = list(songs)
+        res.extend(lst if len(lst) > 0 else [None])
+      else:
+        songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
+        res.extend(list(songs))
 
     self.log(userId, f'GET: User {userId} got highest scores with query text "{songName}"')
     return res
