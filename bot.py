@@ -66,7 +66,7 @@ async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = ""
   await bot_commands.getSongCounts(db, ctx, difficulty, tag, asFile)
 
 @bot.command(aliases=commandAliases['getSongStats'])
-async def getSongStats(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", matchExact = False, showMaxCombo = True, showSongNames = False, interpolate = False):
+async def getSongStats(ctx: commands.Context, songName: str = "", difficulty: str = "", tag: str = "", matchExact = False, showMaxCombo = True, showSongNames = False, interpolate = False):
   msgLog(ctx)
   await bot_commands.getSongStats(db, ctx, songName, difficulty, tag, matchExact, showMaxCombo, showSongNames, interpolate)
 
