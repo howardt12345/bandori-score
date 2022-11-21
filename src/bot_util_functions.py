@@ -128,9 +128,24 @@ def compareSongWithHighest(ctx: commands.Context, db: Database, song: dict, tag:
   for x, (id, value) in enumerate(highestDict.items()):
     _, op, _ = value
     if id == "notes.Perfect":
-      res[id] = (song['notes']['Perfect'], highestScores[x]['notes']['Perfect'] if len(highestScores) > 0 else 0)
+      score = song['notes']['Perfect']
+      highestScore = highestScores[x]['notes']['Perfect'] if len(highestScores) > 0 else 0
+      better = score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True
+      res[id] = (score, highestScore, better)
+    elif id == "fastSlow":
+      if ('fast' in song and 'slow' in song):
+        if (highestScores[x]):
+          score = (song['fast'], song['slow'])
+          highestScore = (highestScores[x]['fast'], highestScores[x]['slow']) if len(highestScores) > 0 else (-1, -1)
+          better = score >= highestScore if op == 'DESC' else score <= highestScore
+          res[id] = (score, highestScore, better)
+        else:
+          res[id] = ((song['fast'], song['slow']), (-1, -1), True)
     else:
-      res[id] = (song[id], highestScores[x][id] if len(highestScores) > 0 else 0 if op == 'DESC' else -1)
+      score = song[id]
+      highestScore = highestScores[x][id] if len(highestScores) > 0 else 0 if op == 'DESC' else -1
+      better = score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True
+      res[id] = (score, highestScore, better)
   return res
 
 async def printSongCompare(ctx: commands.Context, highestScores: dict):
@@ -148,11 +163,12 @@ async def printSongCompare(ctx: commands.Context, highestScores: dict):
     msg = 'Score analysis:\n'
     for _, (id, value) in enumerate(highestDict.items()):
       name, op, _ = value
-      score, highestScore = highestScores[id]
-      fscore, fhighestScore = format(id, score), format(id, highestScore)
-      if score >= highestScore if op == 'DESC' else score <= highestScore if highestScore >= 0 else True:
-        msg += f'✅ {name} >= highest ({fscore} >= {fhighestScore})\n'
-      else:
-        msg += f'❌ {name} < highest ({fscore} < {fhighestScore})\n'
+      if id in highestScores:
+        score, highestScore, better = highestScores[id]
+        fscore, fhighestScore = format(id, score), format(id, highestScore)
+        if better:
+          msg += f'✅ {name} >= highest ({fscore} >= {fhighestScore})\n'
+        else:
+          msg += f'❌ {name} < highest ({fscore} < {fhighestScore})\n'
     await ctx.send(msg)
   
