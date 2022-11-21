@@ -4,6 +4,7 @@ types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
 ratios = [2.115, 2.78, 2.85, 4.37, 3.9]
 # The top and bottom tolerances of the note type bounding box
 tolerances = [(0, -2), (0, 0), (0, 0), (1, 3), (2, 5)]
+maxComboDim = [((5, 10), (-5, 65)), ((0, 5), (0, 45))]
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
 tags = ['live', 'multilive', 'event']
 tagIcons = ['🎵', '🎤', '🎉']

@@ -4,8 +4,8 @@ import cv2
 import pytesseract
 
 from song_info import SongInfo
-from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, rescaleImage
-from consts import ranks
+from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, fetchFastSlow, rescaleImage
+from consts import ranks, maxComboDim
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -17,7 +17,8 @@ class ScoreAPI:
       'noteTypes': fetchNoteTypes(mode),
       'difficulties': fetchDifficulties(mode),
       'scoreIcon': fetchScoreIcon(mode),
-      'maxCombo': fetchMaxCombo(mode)
+      'maxCombo': fetchMaxCombo(mode),
+      'fastSlow': fetchFastSlow(mode)
     }
 
   def getRank(self, image):
@@ -135,13 +136,16 @@ class ScoreAPI:
   def getMaxCombo(self, image):
     '''Gets the max combo of the image result'''
     # Get the location of the max combo icon
-    result = cv2.matchTemplate(image, self.templates['maxCombo'], cv2.TM_CCOEFF_NORMED)
-    h, w, _ = self.templates['maxCombo'].shape
+    results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), x) for x, template in enumerate(self.templates['maxCombo'])]
+    result, index = max(results, key=lambda x: x[0].max())
+    h, w, _ = self.templates['maxCombo'][index].shape
     y, x = np.unravel_index(np.argmax(result), result.shape)
 
+    dim = maxComboDim[index]
+
     # Get the bounding box where the max combo is
-    tl_x, tl_y = x+5, y+h+10
-    br_x, br_y = x+w-5, y+h+65
+    tl_x, tl_y = x+dim[0][0], y+h+dim[0][1]
+    br_x, br_y = x+w+dim[1][0], y+h+dim[1][1]
 
     # Draw the rectangle of the bounding box if draw is enabled
     if self.draw:
@@ -157,7 +161,10 @@ class ScoreAPI:
     data = data.strip()
 
     # Return the max combo score, defaulting to 0 if the score is not a number
-    return int(data) if data.isdecimal() else 0
+    return int(data) if data.isdecimal() else 0, index == 1
+
+  def getFastSlow(self, image):
+    pass
 
   def getSongInfo(self, image):
     '''Gets the song information from an image'''
@@ -171,7 +178,9 @@ class ScoreAPI:
     # Get the score and high score
     score, highScore = self.getScore(img)
     # Get the max combo
-    maxCombo = self.getMaxCombo(img)
+    maxCombo, fastSlow = self.getMaxCombo(img)
+    if fastSlow:
+      fast, slow = self.getFastSlow(img)
     # Get the note type scores
     notes = self.getNotes(img)
 
@@ -187,7 +196,7 @@ class ScoreAPI:
     # Get the score and high score
     score, highScore = self.getScore(image)
     # Get the max combo
-    maxCombo = self.getMaxCombo(image)
+    maxCombo, fastSlow = self.getMaxCombo(image)
     # Get the note type scores
     notes = self.getNotes(image)
 

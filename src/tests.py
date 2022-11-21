@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
 from shapely.geometry import LineString
 
+import sys
+
 def testDir(path):
   '''Test on a directory of images'''
   images = [cv2.imread(image) for image in glob.glob(f"testdata/{path}/*.jpg")]
@@ -37,4 +39,4 @@ def testImage(path):
 
 
 # testDir('live')
-testImage('testdata/ipad/IMG_0990.png')
+testImage(f'{sys.path[0]} + /../testdata/Screenshot_20221121-004050_BanG Dream!.png')

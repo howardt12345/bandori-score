@@ -9,9 +9,11 @@ from matplotlib.ticker import PercentFormatter
 import matplotlib.font_manager as fm
 from shapely.geometry import LineString
 
+import sys
+
 from song_info import SongInfo
 
-ASSETS_DIR = '../assets'
+ASSETS_DIR = f'{sys.path[0]} + /../assets'
 
 def fetchRanks(path):
   '''Fetches the templates of the different ranks'''
@@ -58,7 +60,12 @@ def fetchScoreIcon(path):
 def fetchMaxCombo(path):
   '''Fetches the max combo template'''
   ext = "png" if path == 'direct' else "jpg"
-  return cv2.imread(f'{ASSETS_DIR}/{path}/Max combo.{ext}')
+  return cv2.imread(f'{ASSETS_DIR}/{path}/Max combo.{ext}'), cv2.imread(f'{ASSETS_DIR}/{path}/Max combo small.{ext}')
+
+def fetchFastSlow(path):
+  '''Fetches the fast and slow templates'''
+  ext = "png" if path == 'direct' else "jpg"
+  return cv2.imread(f'{ASSETS_DIR}/{path}/fast.{ext}'), cv2.imread(f'{ASSETS_DIR}/{path}/slow.{ext}')
 
 def songInfoToStr(song: SongInfo):
   '''Converts a SongInfo object to a formatted string'''
