@@ -1,7 +1,8 @@
 import urllib.request, json 
 from difflib import get_close_matches
 
-SONGS_URL = 'https://bestdori.com/api/songs/all.5.json'
+SONGS_URL = 'https://bestdori.com/api/songs/'
+SONGS_ALL = 'all.5.json'
 BANDS_URL = 'https://bestdori.com/api/bands/all.1.json'
 def headers(path: str): 
   return {
@@ -13,7 +14,10 @@ def headers(path: str):
   }
 
 def getSongs():
-  return getJson(SONGS_URL, SONGS_URL.split('.com/')[1])
+  return getJson(SONGS_URL + SONGS_ALL, (SONGS_URL + SONGS_ALL).split('.com/')[1])
+
+def getSong(songId: str):
+  return getJson(f'{SONGS_URL}{songId}.json', f'{SONGS_URL}{songId}.json'.split('.com/')[1])
     
 def getBands():
   return getJson(BANDS_URL, BANDS_URL.split('.com/')[1])
@@ -47,14 +51,20 @@ class BestdoriAPI:
       songNames.append(title if title is not None else fallbackTitle)
     return songNames
 
-  def getSong(self, songName):
+  def getSong(self, songName, songInfo=True):
     name = self.closestSongName(songName)
-    for song in self.songs:
-      title = self.songs[song]['musicTitle'][self.server]
-      fallbackTitle = next(song for song in self.songs[song]['musicTitle'] if song is not None)
+    song, info = None, None
+    key = ""
+    for s in self.songs:
+      title = self.songs[s]['musicTitle'][self.server]
+      fallbackTitle = next(song for song in self.songs[s]['musicTitle'] if song is not None)
       if title == name or fallbackTitle == name:
-        return self.songs[song]
-    return None
+        key = s
+        song = self.songs[s]
+        break
+    if songInfo and key:
+      info = getSong(key)
+    return key, song, info
 
   def getSongBand(self, songName):
     song = self.getSong(songName)

@@ -55,7 +55,8 @@ class SongInfo:
     return tp / self.totalNotes()
 
   def getSongData(self, bd: BestdoriAPI):
-    return bd.getSong(self.songName)
+    _, song, _ = bd.getSong(self.songName)
+    return song
 
   def getSongName(self, bd: BestdoriAPI):
     name = bd.closestSongName(self.songName)

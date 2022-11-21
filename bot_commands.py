@@ -325,9 +325,11 @@ async def getRecent(db: Database, ctx: commands.Context, limit: int, tag: str = 
 
 async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
   '''Gets the bestdori song info for a given query'''
-  song = db.bestdori.getSong(query)
+  key, song, _ = db.bestdori.getSong(query)
   if song:
     await ctx.send(f'```json\n{song}```')
+  if key: 
+    await ctx.send(f'https://bestdori.com/info/songs/{key}')
   else:
     await ctx.send(f'No Bestdori song info found for query "{query}"')
 
