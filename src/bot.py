@@ -26,7 +26,7 @@ TOKEN = os.getenv('TOKEN_DEV' if dev else 'TOKEN')
 
 filename = f"{str(datetime.datetime.now()).split('.')[0].replace(':', '-') + ('_dev' if dev else '')}.log"
 path = f"{sys.path[0]} + /../logs/{filename}"
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG, filename=path, filemode='a')
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO, filename=path, filemode='a')
 logging.getLogger().addHandler(logging.StreamHandler())
 
 # Create bot
