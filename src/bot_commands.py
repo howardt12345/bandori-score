@@ -86,7 +86,7 @@ async def newScores(
         pass
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
-        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True)
+        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True, currentTag=tag)
         if wantTag:
           tag = await promptTag(bot, ctx)
         pass

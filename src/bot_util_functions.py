@@ -11,7 +11,7 @@ from song_info import SongInfo
 def msgLog(ctx: commands.Context):
   print(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
 
-async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False):
+async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
@@ -68,7 +68,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
   # Ask if user wants to tag the song
   wantTag = False
   if askTag and newSong:
-    reply_msg = await ctx.send(f'Do you want to tag this song?')
+    reply_msg = await ctx.send(f'Do you want to tag this song? The current tag is `{currentTag}`')
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
 
