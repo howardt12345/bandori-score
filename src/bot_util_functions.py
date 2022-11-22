@@ -32,7 +32,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
     ns = None
     while ns is None:
       # Get the message from the user and store it in song info
-      msg = await bot.wait_for('message', check=check, timeout=180.0)
+      msg = await bot.wait_for('message', check=check, timeout=TIMEOUT)
       ns, error = strToSongInfo(msg.content)
       if error:
         await ctx.send(error)
@@ -47,7 +47,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       await ctx.send('Timed out')
     else:
@@ -77,7 +77,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       await ctx.send('Timed out')
     else:
@@ -111,7 +111,7 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
   def check(reaction, user):
     return user == ctx.author and str(reaction.emoji) in tagIcons
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     tag = tags[tagIcons.index(reaction.emoji)]
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')

@@ -1,4 +1,4 @@
-
+TIMEOUT = 180.0
 ranks = ['SS', 'S', 'A', 'B', 'C', 'D']
 types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
 ratios = [2.115, 2.78, 2.85, 4.37, 3.9]

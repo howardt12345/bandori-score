@@ -17,7 +17,7 @@ from functions import songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
-from consts import tags, bestDict
+from consts import tags, bestDict, TIMEOUT
 from bot_help import getCommandHelp
 
 async def newScores(
@@ -72,7 +72,7 @@ async def newScores(
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       output = None
       await ctx.send('Timed out')
@@ -189,7 +189,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
 
   # Wait for user to react
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
   except asyncio.TimeoutError:
     await ctx.send('Timed out')
   else:
@@ -220,7 +220,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
 
   # Wait for user to react
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
   except asyncio.TimeoutError:
     await ctx.send('Timed out')
   else:
