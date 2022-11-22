@@ -10,7 +10,7 @@ from functions import songInfoToStr, songTemplateFormat, strToSongInfo
 from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
-  logging.info(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
+  logging.info(f'--- {ctx.message.author} ({ctx.message.guild} in #{ctx.message.channel}) {ctx.message.content}')
 
 async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''

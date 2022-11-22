@@ -48,7 +48,7 @@ class Database:
       created_song = self.db[userId]['songs'].find_one(
         {"_id": new_song.inserted_id}
       )
-      self.log(userId, f"POST: User {userId} created: \n{song}", songId=created_song.get('_id', ''))
+      self.log(userId, f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
       return created_song
     except errors.DuplicateKeyError:
       self.log(userId, f"POST: User {userId} tried to create a duplicate song: \n{song}")
