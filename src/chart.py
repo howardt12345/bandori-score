@@ -16,6 +16,7 @@ fprop = fm.FontProperties(fname='NotoSansJP-Regular.otf')
 min_offset, max_offset = 1, 3
 
 def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bool = False):
+  '''Plots a dot on the graph, adds a song label if specified'''
   axes.plot(x, y, 'o', color=difficultyColors[song.difficulty])
   axes.annotate(
     f"{v}\n{'(int.)' if song.totalNotes() <= 0 else ''}".strip(), 
@@ -28,7 +29,7 @@ def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bo
   )
   if showSongNames:
     axes.annotate(
-      f'{song.getSongName(bd)}\n{song.getSongName(bd)}', 
+      f'{song.getSongName(bd)}\n{song.getBandName(bd)}', 
       xy=(x, y), 
       xytext=(0, 10*(1 if y < h else -1)), 
       textcoords='offset points', 
@@ -39,7 +40,9 @@ def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bo
       fontproperties=fprop
     )
 
+
 def format_number(data_value, _):
+  '''Formats the y scale number for thousands and millions'''
   if data_value >= 1_000_000:
     formatter = '{:1.2f}M'.format(data_value*0.000_001)
   else:
@@ -48,6 +51,7 @@ def format_number(data_value, _):
 
 
 def scoreGraph(axes: Axes, scores, songs, bd: BestdoriAPI, showSongNames: bool = False):
+  '''Plots a graph of the scores'''
   axes.plot(scores, color='silver')
   for i, v in enumerate(scores):
     plotDot(axes, i, v, v, min(scores) + (max(scores) - min(scores)) / 2, songs[i], bd, showSongNames)
@@ -58,7 +62,9 @@ def scoreGraph(axes: Axes, scores, songs, bd: BestdoriAPI, showSongNames: bool =
 
   axes.grid(True)
 
+
 def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
+  '''Plots the perfect, great, good, bad, miss, and max combo counts on a graph. The graph shows more difference between notes on the top and bottom of the graph'''
   perfects = [song.notes['Perfect'] for song in songs]
   greats = [song.notes['Great'] for song in songs]
   goods = [song.notes['Good'] for song in songs]
@@ -113,6 +119,7 @@ def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
   axes.grid(True)
 
 def TPgraph(axes: Axes, songs, bd: BestdoriAPI, showSongNames: bool = False):
+  '''Plots the TP score calculated from each song'''
   TP = [song.calculateTP() for song in songs]
   min_tp = min(filter(lambda tp: tp > 0.01, TP))
   xs = np.arange(len(TP))
@@ -128,6 +135,37 @@ def TPgraph(axes: Axes, songs, bd: BestdoriAPI, showSongNames: bool = False):
   
   for i, v in enumerate(TP):
     plotDot(axes, i, v, '{:,.2%}'.format(v), min_tp + (max(TP) - min_tp) / 2, songs[i], bd, showSongNames)
+
+def fastSlowGraph(axes: Axes, songs):
+  fast = [song['fast'] for song in songs]
+  slow = [song['slow'] for song in songs]
+
+  min_notes, max_notes = 0, max([max(fast), max(slow)]) + max_offset
+  distance = max_notes - min_notes
+
+  fast_transformed = [float(fast + min_offset)/distance for fast in fast]
+  slow_transformed = [float(slow + min_offset)/distance for slow in slow]
+  axes.plot(fast_transformed, label="Perfect", color='blue', marker='o')
+  axes.plot(slow_transformed, label="Great", color='orange', marker='o')
+
+  for i, v in enumerate(fast_transformed):
+    axes.annotate(fast[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(slow_transformed):
+    axes.annotate(slow[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+
+  axes.ticklabel_format(style='plain', axis='both', useOffset=False)
+  axes.set_title("Notes")
+  axes.legend(loc='center right', prop={'size': 8})
+  axes.axes.get_xaxis().set_visible(False)
+  axes.set_yscale('logit', one_half="1/2", use_overline=True)
+
+  amount, step = 7, 1
+  rangeList = [y ** 2 for y in range(min_notes, min_notes+amount*step, step)]
+  ticks = [float(x+min_offset)/distance for x in rangeList] + [0.5] + [float(max_notes-x-(max_offset-1))/distance for x in reversed(rangeList)]
+  minorTicks = rangeList + [(max_notes-min_notes)/2] + [max_notes-x-max_offset for x in reversed(rangeList)]
+
+  axes.set_yticks(ticks, minorTicks)
+  axes.grid(True)
 
 def songCountGraph(
   songs: list[songInfoToStr], 
