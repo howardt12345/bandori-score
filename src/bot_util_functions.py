@@ -2,14 +2,15 @@ import numpy as np
 import cv2
 from discord.ext import commands
 import asyncio
+import logging
+
 from consts import *
 from db import Database
-
 from functions import songInfoToStr, songTemplateFormat, strToSongInfo
 from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
-  print(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
+  logging.info(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
 
 async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
@@ -149,7 +150,7 @@ def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: st
   return res
 
 async def printSongCompare(ctx: commands.Context, bestScores: dict):
-  '''Print the comparison of the song with the best rated songs in the database'''
+  '''logging.info the comparison of the song with the best rated songs in the database'''
   if bestScores is None:
     await ctx.send('Failed to compare song with other entries')
   else:

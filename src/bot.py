@@ -7,35 +7,26 @@ from discord.ext.commands import has_permissions
 from dotenv import load_dotenv
 import os
 
+import datetime
+import logging
+
 from api import ScoreAPI
 from db import Database
 import bot_commands
 import bot_commands_admin
 from bot_util_functions import msgLog
 from bot_help import *
-import datetime
 
 import sys
-
-class Logger(object):
-  def __init__(self, filename):
-    self.terminal = sys.stdout
-    self.path = f"{sys.path[0]} + /../logs/{filename}.log"
-
-  def write(self, message):
-    with open (self.path, "a", encoding = 'utf-8') as self.log:            
-      self.log.write(f"{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}: {message}")
-    self.terminal.write(message)
-
-  def flush(self):
-    self.terminal.flush()
 
 # Get token from .env
 load_dotenv()
 dev = len(sys.argv) > 1 and sys.argv[1] == 'dev'
 TOKEN = os.getenv('TOKEN_DEV' if dev else 'TOKEN')
 
-sys.stdout = Logger(str(datetime.datetime.now()).split('.')[0].replace(':', '-') + ('_dev' if dev else ''))
+filename = f"{str(datetime.datetime.now()).split('.')[0].replace(':', '-') + ('_dev' if dev else '')}.log"
+path = f"{sys.path[0]} + /../logs/{filename}"
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG, filename=path, filemode='a')
 
 # Create bot
 intents = discord.Intents.default()

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import re
 from bson.objectid import ObjectId
+import logging
 
 from song_info import SongInfo
 from bestdori import BestdoriAPI
@@ -16,7 +17,7 @@ class Database:
     load_dotenv()
     self.client = MongoClient(os.getenv('ATLAS_URI'))
     self.db = self.client[os.getenv('DB_NAME')]
-    print("Connected to the MongoDB database!")
+    logging.info("Connected to the MongoDB database!")
     self.bestdori = BestdoriAPI()
 
 
@@ -219,7 +220,7 @@ class Database:
       "songId": songId,
       "userId": userId
     })
-    print(message)
+    logging.info(message)
 
 
   @staticmethod

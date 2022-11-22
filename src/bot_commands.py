@@ -4,6 +4,7 @@ from io import BytesIO, StringIO
 import discord
 from discord.ext import commands
 import asyncio
+import logging
 
 from dotenv import load_dotenv
 import os
@@ -128,7 +129,7 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
     try:
       scores = db.get_song(str(user.id), query.strip())
     except Exception as e:
-      print(e)
+      logging.info(e)
       scores = db.get_scores_of_song(str(user.id), query.strip())
 
   if not scores or len(scores) == 0:
