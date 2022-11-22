@@ -6,3 +6,5 @@ Changelog:
 - Adds support for fast/slow score screenshots
   - Adds fast/slow as a criteria in the score analysis
   - Adds best fast/slow as a category in `$getBest`
+  - Adds fast/slow graph to the score analysis
+- Various bugfixes

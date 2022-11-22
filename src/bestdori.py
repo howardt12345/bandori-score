@@ -31,44 +31,43 @@ def getJson(url: str, path: str):
 class BestdoriAPI:
   def __init__(self, server=1):
     self.server = server
+    self.songs = getSongs()
+    self.bands = getBands()
   
   def closestSongName(self, songName):
     matches = get_close_matches(songName, self.getSongNames(), n=1, cutoff=0.5)
     return matches[0] if len(matches) > 0 else None
   
   def getBandName(self, bandId: int):
-    bands = getBands()
-    bandName = bands[str(bandId)]['bandName'][self.server]
-    fallbackBandName = next(band for band in bands[str(bandId)]['bandName'] if band is not None)
+    bandName = self.bands[str(bandId)]['bandName'][self.server]
+    fallbackBandName = next(band for band in self.bands[str(bandId)]['bandName'] if band is not None)
     return bandName if bandName is not None else fallbackBandName
 
   def getSongNames(self):
-    songs = getSongs()
     songNames = []
-    for song in songs:
-      title = songs[song]['musicTitle'][self.server]
-      fallbackTitle = next(song for song in songs[song]['musicTitle'] if song is not None)
+    for song in self.songs:
+      title = self.songs[song]['musicTitle'][self.server]
+      fallbackTitle = next(song for song in self.songs[song]['musicTitle'] if song is not None)
       songNames.append(title if title is not None else fallbackTitle)
     return songNames
 
   def getSong(self, songName, songInfo=True):
-    songs = getSongs()
     name = self.closestSongName(songName)
     song, info = None, None
     key = ""
-    for s in songs:
-      title = songs[s]['musicTitle'][self.server]
-      fallbackTitle = next(song for song in songs[s]['musicTitle'] if song is not None)
+    for s in self.songs:
+      title = self.songs[s]['musicTitle'][self.server]
+      fallbackTitle = next(song for song in self.songs[s]['musicTitle'] if song is not None)
       if title == name or fallbackTitle == name:
         key = s
-        song = songs[s]
+        song = self.songs[s]
         break
     if songInfo and key:
       info = getSong(key)
     return key, song, info
 
   def getSongBand(self, songName):
-    song = self.getSong(songName)
+    _, song, _ = self.getSong(songName)
     return self.getBandName(song['bandId'])
 
   def getDifficulty(self, song, difficulty: int):
