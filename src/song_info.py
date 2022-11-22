@@ -6,15 +6,15 @@ class SongInfo:
   '''Object representing a song's info'''
   def __init__(
     self, 
-    songName="", 
-    difficulty="", 
-    rank="", 
-    score=-1, 
-    highScore=-1, 
-    maxCombo=-1, 
+    songName: str = "", 
+    difficulty: str = "", 
+    rank: str = "", 
+    score: int = -1, 
+    highScore: int = -1, 
+    maxCombo: int = -1, 
     notes={'Perfect': -1, 'Great': -1, 'Good': -1, 'Bad': -1, 'Miss': -1},
-    fast=-1,
-    slow=-1
+    fast: int = -1,
+    slow: int = -1
   ):
     self.songName = songName
     self.difficulty = difficulty
