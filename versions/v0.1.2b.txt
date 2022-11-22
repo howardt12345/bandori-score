@@ -1,0 +1,4 @@
+v0.1.2b Private beta
+
+Changelog:
+- Fixed an issue where compare would fail when adding a song for the first time
