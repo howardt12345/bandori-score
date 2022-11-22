@@ -13,7 +13,6 @@ from functions import songInfoToStr
 from song_info import SongInfo
 
 fprop = fm.FontProperties(fname='NotoSansJP-Regular.otf')
-min_offset, max_offset = 1, 3
 
 def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bool = False):
   '''Plots a dot on the graph, adds a song label if specified'''
@@ -29,7 +28,7 @@ def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bo
   )
   if showSongNames:
     axes.annotate(
-      f'{song.getSongName(bd)}\n{song.getBandName(bd)}', 
+      f'{song.getSongName(bd)}', 
       xy=(x, y), 
       xytext=(0, 10*(1 if y < h else -1)), 
       textcoords='offset points', 
@@ -73,6 +72,7 @@ def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
   if showMaxCombo:
     maxCombos = [song.maxCombo for song in songs]
 
+  min_offset, max_offset = 1, 3
   min_notes, max_notes = 0, max(perfects if not showMaxCombo else [max(perfects), max(maxCombos)]) + max_offset
   distance = max_notes - min_notes
 
@@ -107,7 +107,7 @@ def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
   axes.ticklabel_format(style='plain', axis='both', useOffset=False)
   axes.set_title("Notes")
   axes.legend(loc='center right', prop={'size': 8})
-  axes.axes.get_xaxis().set_visible(False)
+  axes.get_xaxis().set_visible(False)
   axes.set_yscale('logit', one_half="1/2", use_overline=True)
 
   amount, step = 7, 1
@@ -136,39 +136,32 @@ def TPgraph(axes: Axes, songs, bd: BestdoriAPI, showSongNames: bool = False):
   for i, v in enumerate(TP):
     plotDot(axes, i, v, '{:,.2%}'.format(v), min_tp + (max(TP) - min_tp) / 2, songs[i], bd, showSongNames)
 
-def fastSlowGraph(axes: Axes, songs):
-  fast = [song['fast'] for song in songs]
-  slow = [song['slow'] for song in songs]
+def fastSlowGraph(axes: Axes, songs: list[SongInfo]):
+  fasts = [song.fast for song in songs]
+  slows = [song.slow for song in songs]
 
-  min_notes, max_notes = 0, max([max(fast), max(slow)]) + max_offset
-  distance = max_notes - min_notes
+  min_fs, max_fs = 0, max([max(fasts), max(slows)])
 
-  fast_transformed = [float(fast + min_offset)/distance for fast in fast]
-  slow_transformed = [float(slow + min_offset)/distance for slow in slow]
-  axes.plot(fast_transformed, label="Perfect", color='blue', marker='o')
-  axes.plot(slow_transformed, label="Great", color='orange', marker='o')
+  axes.plot(fasts, label="Fast", color='blue', marker='o')
+  axes.plot(slows, label="Slow", color='orange', marker='o')
 
-  for i, v in enumerate(fast_transformed):
-    axes.annotate(fast[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
-  for i, v in enumerate(slow_transformed):
-    axes.annotate(slow[i], xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(fasts):
+    if v >= 0:
+      axes.annotate(v, xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+  for i, v in enumerate(slows): 
+    if v >= 0:
+      axes.annotate(v, xy=(i, v), xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
 
   axes.ticklabel_format(style='plain', axis='both', useOffset=False)
-  axes.set_title("Notes")
+  axes.set_title("Fast/Slow")
   axes.legend(loc='center right', prop={'size': 8})
-  axes.axes.get_xaxis().set_visible(False)
-  axes.set_yscale('logit', one_half="1/2", use_overline=True)
+  axes.get_xaxis().set_visible(False)
+  axes.set_ylim([min_fs, max_fs+1])
 
-  amount, step = 7, 1
-  rangeList = [y ** 2 for y in range(min_notes, min_notes+amount*step, step)]
-  ticks = [float(x+min_offset)/distance for x in rangeList] + [0.5] + [float(max_notes-x-(max_offset-1))/distance for x in reversed(rangeList)]
-  minorTicks = rangeList + [(max_notes-min_notes)/2] + [max_notes-x-max_offset for x in reversed(rangeList)]
-
-  axes.set_yticks(ticks, minorTicks)
   axes.grid(True)
 
 def songCountGraph(
-  songs: list[songInfoToStr], 
+  songs: list[SongInfo], 
   bd: BestdoriAPI, 
   songName: str, 
   difficulty: str = None, 
@@ -196,11 +189,15 @@ def songCountGraph(
   chartWidth = max(len(songs)/1.5, 10)
   chartHeight = 9
 
-  figure, axis = plt.subplots(3, 1, figsize=(chartWidth, chartHeight))
+  showFastSlow = any([song.hasFastSlow() for song in songs])
+
+  figure, axis = plt.subplots(4 if showFastSlow else 3, 1, figsize=(chartWidth, chartHeight))
 
   scoreGraph(axis[0], scores, songs, bd, showSongNames)
   notesGraph(axis[1], songs, showMaxCombo)
   TPgraph(axis[2], songs, bd, showSongNames)
+  if showFastSlow:
+    fastSlowGraph(axis[3], songs)
 
   closestSongName = bd.closestSongName(songName)
   figure.suptitle(f"{f'{userName}: ' if userName else ''}{f'({difficulty}) ' if difficulty else ' '}{closestSongName if closestSongName else songName}{f' with tag {tag}' if tag else ''}", fontsize=16, fontproperties=fprop)
