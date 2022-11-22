@@ -13,8 +13,24 @@ import bot_commands
 import bot_commands_admin
 from bot_util_functions import msgLog
 from bot_help import *
+import datetime
 
 import sys
+
+class Logger(object):
+  def __init__(self):
+    self.terminal = sys.stdout
+    self.log = open(f"{sys.path[0]} + /../logs/{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}.log", "a", encoding = 'utf-8')
+
+  def write(self, message):
+    self.terminal.write(message)
+    self.log.write(message)  
+
+  def flush(self):
+    self.log.flush()
+    self.terminal.flush()
+
+sys.stdout = Logger()
 
 # Get token from .env
 load_dotenv()
