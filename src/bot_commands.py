@@ -12,7 +12,8 @@ import cv2
 import numpy as np
 
 from api import ScoreAPI
-from functions import songCountGraph, songInfoToStr, getAboutTP
+from chart import songCountGraph
+from functions import songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
