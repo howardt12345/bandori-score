@@ -18,9 +18,9 @@ import datetime
 import sys
 
 class Logger(object):
-  def __init__(self):
+  def __init__(self, filename):
     self.terminal = sys.stdout
-    self.path = f"{sys.path[0]} + /../logs/{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}.log"
+    self.path = f"{sys.path[0]} + /../logs/{filename}.log"
 
   def write(self, message):
     with open (self.path, "a", encoding = 'utf-8') as self.log:            
@@ -28,15 +28,14 @@ class Logger(object):
     self.terminal.write(message)
 
   def flush(self):
-    self.log.flush()
     self.terminal.flush()
-
-sys.stdout = Logger()
 
 # Get token from .env
 load_dotenv()
 dev = len(sys.argv) > 1 and sys.argv[1] == 'dev'
 TOKEN = os.getenv('TOKEN_DEV' if dev else 'TOKEN')
+
+sys.stdout = Logger(str(datetime.datetime.now()).split('.')[0].replace(':', '-') + ('_dev' if dev else ''))
 
 # Create bot
 intents = discord.Intents.default()
