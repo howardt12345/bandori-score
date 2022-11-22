@@ -129,21 +129,21 @@ def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: st
     _, op, _ = value
     if id == "notes.Perfect":
       score = song['notes']['Perfect']
-      bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 else 0
+      bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 and bestScores[x] else 0
       better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
       res[id] = (score, bestScore, better)
     elif id == "fastSlow":
       if ('fast' in song and 'slow' in song):
         if (bestScores[x]):
           score = (song['fast'], song['slow'])
-          bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 else (-1, -1)
+          bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 and bestScores[x] else (-1, -1)
           better = score >= bestScore if op == 'DESC' else score <= bestScore
           res[id] = (score, bestScore, better)
         else:
           res[id] = ((song['fast'], song['slow']), (-1, -1), True)
     else:
       score = song[id]
-      bestScore = bestScores[x][id] if len(bestScores) > 0 else 0 if op == 'DESC' else -1
+      bestScore = bestScores[x][id] if len(bestScores) > 0 and bestScores[x] else 0 if op == 'DESC' else -1
       better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
       res[id] = (score, bestScore, better)
   return res

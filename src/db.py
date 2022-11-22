@@ -120,7 +120,8 @@ class Database:
         res.extend(lst if len(lst) > 0 else [None])
       else:
         songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
-        res.extend(list(songs))
+        lst = list(songs)
+        res.extend(lst if len(lst) > 0 else [None])
 
     self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
     return res

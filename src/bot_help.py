@@ -230,7 +230,11 @@ def getCommandHelp(command, prefix):
       msg += f' - `{prefix}{c}` (aliases: `{"`, `".join(commandAliases[c])}`): {commandHelp[c]["description"]}\n'
     return msg + '\nUse `$help` command for more info on a command.'
   else:
-    if command in commandHelp:
+    key = next((k for k in commandAliases if command in commandAliases[k]), None)
+    
+    if command in commandHelp or key in commandHelp:
+      if key is not None:
+        command = key
       msg = f'`{prefix}{"|".join([command] + commandAliases[command])}`\n\n{commandHelp[command]["help"]}'
       cmdParams = commandParams[command]
       if cmdParams and cmdParams != {}:
