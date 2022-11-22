@@ -67,7 +67,7 @@ class BestdoriAPI:
     return key, song, info
 
   def getSongBand(self, songName):
-    song = self.getSong(songName)
+    _, song, _ = self.getSong(songName)
     return self.getBandName(song['bandId'])
 
   def getDifficulty(self, song, difficulty: int):

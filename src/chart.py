@@ -28,7 +28,7 @@ def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bo
   )
   if showSongNames:
     axes.annotate(
-      f'{song.getSongName(bd)}', 
+      f'{song.getSongName(bd)}\n{song.getBandName(bd)}', 
       xy=(x, y), 
       xytext=(0, 10*(1 if y < h else -1)), 
       textcoords='offset points', 
