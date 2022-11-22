@@ -24,7 +24,7 @@ class Logger(object):
 
   def write(self, message):
     with open (self.path, "a", encoding = 'utf-8') as self.log:            
-      self.log.write(message)
+      self.log.write(f"{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}: {message}")
     self.terminal.write(message)
 
   def flush(self):
