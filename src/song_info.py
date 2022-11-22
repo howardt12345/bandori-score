@@ -27,7 +27,7 @@ class SongInfo:
     self.slow = slow
 
   def __str__(self):
-    return f"{self.songName} - {self.difficulty}\nRank: {self.rank}, Score: {self.score}, High Score: {self.highScore}, Max Combo: {self.maxCombo}\n{self.notes}"
+    return f"{self.songName} - {self.difficulty}\nRank: {self.rank}, Score: {self.score}, High Score: {self.highScore}, Max Combo: {self.maxCombo}\n{self.notes}\nTP: {self.calculateTP()} Fast: {self.fast}, Slow: {self.slow}"
 
   def __repr__(self):
     return self.__str__()
