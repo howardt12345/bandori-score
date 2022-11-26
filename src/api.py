@@ -3,9 +3,18 @@ import numpy as np
 import cv2
 import pytesseract
 
+import sys
+import datetime
+
 from song_info import SongInfo
 from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, fetchFastSlow, rescaleImage
 from consts import ranks, maxComboDim
+
+def writeData(img, prefix, res):
+  path = f"{sys.path[0]} + /../testdata/data/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
+  cv2.imwrite(f'{path}.tif', img)
+  with open(f'{path}.gt.txt', 'w') as f:
+    f.write(str(res))
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -67,6 +76,9 @@ class ScoreAPI:
       data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
       res = int(data.strip()) if data.strip().isdecimal() else -1
       noteScores[type] = res
+      
+      # Write the data to testdata
+      writeData(crop, f'Note-{type}', res)
     
     # Return the note type scores in a map
     return noteScores
@@ -95,6 +107,10 @@ class ScoreAPI:
     # Read the score text from the image
     ROI = blackAndWhiteImage
     data = pytesseract.image_to_string(ROI, config='--psm 6')
+
+    # Write the data to testdata
+    writeData(crop, f'Score', data)
+
     lines = data.strip().splitlines()
 
     # If there are no scores, return a negative result
@@ -134,7 +150,10 @@ class ScoreAPI:
 
     # Read the song name from the image
     ROI = blackAndWhiteImage
-    data = pytesseract.image_to_string(ROI, config='--psm 6')
+    data = pytesseract.image_to_string(ROI, config='--psm 7')
+
+    # Write the data to testdata
+    writeData(crop, f'Song', data)
 
     # Return the song name and difficulty
     return (data.strip(), difficulty)
@@ -167,6 +186,9 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
     data = data.strip()
 
+    # Write the data to testdata
+    writeData(crop, f'MaxCombo', data)
+
     # Return the max combo score, defaulting to 0 if the score is not a number
     return int(data) if data.isdecimal() else 0, index == 1
 
@@ -196,6 +218,10 @@ class ScoreAPI:
       ROI = blackAndWhiteImage
       data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
       data = data.strip()
+
+      # Write the data to testdata
+      writeData(crop, f'FastSlow', data)
+
       res.append(int(data) if data.isdecimal() else -1)
 
     # Returns the result in a list. The list should be of the same length as the tuple of templates
