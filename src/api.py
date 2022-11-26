@@ -3,9 +3,18 @@ import numpy as np
 import cv2
 import pytesseract
 
+import sys
+import datetime
+
 from song_info import SongInfo
 from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, fetchFastSlow, rescaleImage
 from consts import ranks, maxComboDim
+
+def writeData(img, prefix, res):
+  path = f"{sys.path[0]} + /../testdata/data/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
+  cv2.imwrite(f'{path}.tif', img)
+  with open(f'{path}.gt.txt', 'w') as f:
+    f.write(str(res))
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -57,13 +66,18 @@ class ScoreAPI:
         cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
       # Make image black and white for OCR
-      image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-      (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
+      crop = image[tl_y:br_y, tl_x:br_x]
+      image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+      (_, blackAndWhiteImage) = cv2.threshold(image_gray, 125, 255, cv2.THRESH_BINARY)
 
       # Read the score of the note type from the image
-      ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-      data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-      noteScores[type] = int(data.strip()) if data.strip().isdecimal() else -1
+      ROI = crop
+      data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
+      res = int(data.strip()) if data.strip().isdecimal() else -1
+      noteScores[type] = res
+
+      # Write the data to testdata
+      writeData(crop, f'Note-{type}', res)
     
     # Return the note type scores in a map
     return noteScores
@@ -84,12 +98,17 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
     # Read the score text from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI)
+    ROI = crop
+    data = pytesseract.image_to_string(ROI, config="--psm 6")
+
+    # Write the data to testdata
+    writeData(crop, f'Score', data)
+
     lines = data.strip().splitlines()
 
     # If there are no scores, return a negative result
@@ -123,12 +142,16 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
     # Read the song name from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI, config='--psm 6')
+    ROI = blackAndWhiteImage
+    data = pytesseract.image_to_string(ROI, config='--psm 7')
+
+    # Write the data to testdata
+    writeData(crop, f'Song', data)
 
     # Return the song name and difficulty
     return (data.strip(), difficulty)
@@ -152,13 +175,17 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
 
     # Read the max combo score from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+    ROI = crop
+    data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
     data = data.strip()
+
+    # Write the data to testdata
+    writeData(crop, f'MaxCombo', data)
 
     # Return the max combo score, defaulting to 0 if the score is not a number
     return int(data) if data.isdecimal() else 0, index == 1
@@ -181,13 +208,18 @@ class ScoreAPI:
         cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
       # Make image black and white for OCR
-      image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+      crop = image[tl_y:br_y, tl_x:br_x]
+      image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
       (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
       # Read the fast/slow score from the image
-      ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-      data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+      ROI = crop
+      data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
       data = data.strip()
+
+      # Write the data to testdata
+      writeData(crop, f'FastSlow', data)
+
       res.append(int(data) if data.isdecimal() else -1)
 
     # Returns the result in a list. The list should be of the same length as the tuple of templates
