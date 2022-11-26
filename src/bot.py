@@ -106,4 +106,10 @@ async def version(ctx: commands.Context, version: str, ping: bool = False):
   msgLog(ctx)
   await bot_commands_admin.version(ctx, version, ping)
 
+@bot.command()
+@has_permissions(administrator=True)
+async def announcements(ctx: commands.Context, ping: bool = False):
+  msgLog(ctx)
+  await bot_commands_admin.announcements(ctx, ping)
+
 bot.run(TOKEN)

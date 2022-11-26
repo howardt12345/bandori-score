@@ -1,0 +1,3 @@
+
+- From now until around <t:1669568400:f>, the bot will be hosted on my secondary computer. Will be assessing performance differences during this period.
+- Currently trying a different method for reading the scores. Please report any inaccuracies by pinging the bot.
