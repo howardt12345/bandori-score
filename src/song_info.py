@@ -82,7 +82,7 @@ class SongInfo:
     return tp / self.totalNotes()
 
   def hasFastSlow(self):
-    return self.fast != -1 and self.slow != -1
+    return self.fast != -1 or self.slow != -1
 
   def getSongData(self, bd: BestdoriAPI):
     _, song, _ = bd.getSong(self.songName)
