@@ -112,7 +112,7 @@ async def newScores(
       else:
         await ctx.send('Error adding song to database')
 
-    if compareRes:
+    if not output and compareRes:
       await printSongCompare(ctx, compareRes)
 
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
