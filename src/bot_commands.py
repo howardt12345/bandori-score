@@ -37,6 +37,7 @@ async def newScores(
 
   compareRes = None
 
+  logging.info(f'newScores: Processing scores of {len(files)} song(s)')
   await ctx.send(f'Processing scores of {len(files)} song(s)...')
 
   for x, file in enumerate(files):
@@ -54,6 +55,8 @@ async def newScores(
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
+    logging.info('newScores: Initial song read: ')
+    logging.info(output)
 
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
@@ -80,13 +83,16 @@ async def newScores(
     else:
       if str(reaction.emoji) == '✅':
         # Add to database
+        logging.info('newScores: Adding score to database')
         pass
       elif str(reaction.emoji) == '☑️':
         # Add tag
+        logging.info('newScores: Prompting for tag')
         tag = await promptTag(bot, ctx)
         pass
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
+        logging.info('newScores: User deemed song info inaccurate and is editing song info')
         output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True, currentTag=tag)
         if wantTag:
           tag = await promptTag(bot, ctx)
@@ -94,6 +100,7 @@ async def newScores(
       elif str(reaction.emoji) == '❌':
         # Ignore
         output = None
+        logging.info('newScores: Score add operation canceled')
         await ctx.send('Score discarded')
         pass
 
