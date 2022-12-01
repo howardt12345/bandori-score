@@ -10,11 +10,12 @@ from song_info import SongInfo
 from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, fetchFastSlow, rescaleImage
 from consts import ranks, maxComboDim
 
-def writeData(img, prefix, res):
-  path = f"{sys.path[0]} + /../testdata/data/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
-  cv2.imwrite(f'{path}.tif', img)
-  with open(f'{path}.gt.txt', 'w') as f:
-    f.write(str(res))
+def writeData(img, prefix, res='', path='data', ext='tif'):
+  path = f"{sys.path[0]} + /../testdata/{path}/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
+  cv2.imwrite(f'{path}.{ext}', img)
+  if res:
+    with open(f'{path}.gt.txt', 'w') as f:
+      f.write(str(res))
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -245,6 +246,8 @@ class ScoreAPI:
       fast, slow = -1, -1
     # Get the note type scores
     notes = self.getNotes(img)
+
+    writeData(img, f'SongInfo', path='songs', ext='png')
 
     songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes, fast, slow)
     return songInfo, img
