@@ -57,13 +57,16 @@ class ScoreAPI:
         cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
       # Make image black and white for OCR
-      image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-      (_, blackAndWhiteImage) = cv2.threshold(image_gray, 117, 255, cv2.THRESH_BINARY)
+      crop = image[tl_y:br_y, tl_x:br_x]
+      image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+      blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
+            cv2.THRESH_BINARY, 11, 2)
 
       # Read the score of the note type from the image
-      ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-      data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
-      noteScores[type] = int(data.strip()) if data.strip().isdecimal() else -1
+      ROI = blackAndWhiteImage
+      data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
+      res = int(data.strip()) if data.strip().isdecimal() else -1
+      noteScores[type] = res
     
     # Return the note type scores in a map
     return noteScores
@@ -84,12 +87,13 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
     # Read the score text from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI)
+    ROI = blackAndWhiteImage
+    data = pytesseract.image_to_string(ROI, config='--psm 6')
     lines = data.strip().splitlines()
 
     # If there are no scores, return a negative result
@@ -123,11 +127,12 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
     # Read the song name from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
+    ROI = blackAndWhiteImage
     data = pytesseract.image_to_string(ROI, config='--psm 6')
 
     # Return the song name and difficulty
@@ -152,12 +157,13 @@ class ScoreAPI:
       cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
     # Make image black and white for OCR
-    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[tl_y:br_y, tl_x:br_x]
+    image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
 
     # Read the max combo score from the image
-    ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-    data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+    ROI = blackAndWhiteImage
+    data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
     data = data.strip()
 
     # Return the max combo score, defaulting to 0 if the score is not a number
@@ -173,7 +179,7 @@ class ScoreAPI:
       y, x = np.unravel_index(np.argmax(result), result.shape)
 
       # Get the bounding box where the fast/slow score is
-      tl_x, tl_y = x+w, y
+      tl_x, tl_y = x+w, y-2
       br_x, br_y = x+(w*2), y+h
 
       # Draw the rectangle of the bounding box if draw is enabled
@@ -181,12 +187,13 @@ class ScoreAPI:
         cv2.rectangle(image, (tl_x-1, tl_y-1), (br_x+1, br_y+1), (0, 0, 255), 1)
 
       # Make image black and white for OCR
-      image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+      crop = image[tl_y:br_y, tl_x:br_x]
+      image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
       (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
 
       # Read the fast/slow score from the image
-      ROI = blackAndWhiteImage[tl_y:br_y, tl_x:br_x]
-      data = pytesseract.image_to_string(ROI, config="--psm 6 digits")
+      ROI = blackAndWhiteImage
+      data = pytesseract.image_to_string(ROI, config="--psm 7 digits")
       data = data.strip()
       res.append(int(data) if data.isdecimal() else -1)
 
