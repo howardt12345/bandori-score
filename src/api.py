@@ -91,7 +91,7 @@ class ScoreAPI:
     image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
           cv2.THRESH_BINARY, 11, 2)
-          
+
     # Read the score text from the image
     ROI = blackAndWhiteImage
     data = pytesseract.image_to_string(ROI, config='--psm 6')
@@ -130,7 +130,8 @@ class ScoreAPI:
     # Make image black and white for OCR
     crop = image[tl_y:br_y, tl_x:br_x]
     image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    (_, blackAndWhiteImage) = cv2.threshold(image_gray, 188, 255, cv2.THRESH_BINARY)
+    blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
+          cv2.THRESH_BINARY, 11, 2)
 
     # Read the song name from the image
     ROI = blackAndWhiteImage
