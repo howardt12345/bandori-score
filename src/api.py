@@ -254,7 +254,9 @@ class ScoreAPI:
     # Get the note type scores
     notes = self.getNotes(img)
 
-    writeData(img, f'SongInfo', path='songs', ext='png')
+    # Write the data to testdata
+    if ENABLE_LOGGING:
+      writeData(img, f'SongInfo', path='songs', ext='png')
 
     songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes, fast, slow)
     return songInfo, img
