@@ -80,8 +80,7 @@ class ScoreAPI:
       noteScores[type] = res
 
       # Write the data to testdata
-      if ENABLE_LOGGING:
-        writeData(crop, f'Note-{type}', res)
+      writeData(crop, f'Note-{type}', res)
     
     # Return the note type scores in a map
     return noteScores
