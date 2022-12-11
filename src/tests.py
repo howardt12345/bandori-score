@@ -1,6 +1,5 @@
 # shut opencv errors up
 import os
-import logging
 
 from db import Database
 os.environ["OPENCV_LOG_LEVEL"]="SILENT"
@@ -23,8 +22,8 @@ def testDir(path):
 
   for image in images:
     song, res = scoreAPI.getSongInfo(image)
-    logging.info("---")
-    logging.info(songInfoToStr(song))
+    print("---")
+    print(songInfoToStr(song))
 
 def testImage(path):
   '''Test on a single image'''
@@ -33,13 +32,13 @@ def testImage(path):
   scoreAPI = ScoreAPI(draw=True)
   song, res = scoreAPI.getSongInfo(image)
 
-  logging.info("---")
-  logging.info(songInfoToStr(song))
+  print("---")
+  print(songInfoToStr(song))
 
   plt.imshow(cv2.cvtColor(res, cv2.COLOR_BGR2RGB))
   plt.show()
 
 
 # testDir('live')
-testImage(f'{sys.path[0]} + /../testdata/Screenshot_20221121-004050_BanG Dream!.png')
-testImage(f'{sys.path[0]} + /../testdata/Screenshot_20220929-110500_BanG Dream!.jpg')
+# testImage(f'{sys.path[0]} + /../testdata/IMG_0996.png')
+testImage(f'{sys.path[0]} + /../testdata/BanG_Dream_2022-11-23-22-56-00.jpg')
