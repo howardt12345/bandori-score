@@ -11,11 +11,12 @@ from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreI
 from consts import ranks, maxComboDim, ENABLE_LOGGING
 
 def writeData(img, prefix, res='', path='data', ext='tif'):
-  path = f"{sys.path[0]} + /../testdata/{path}/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
-  cv2.imwrite(f'{path}.{ext}', img)
-  if res:
-    with open(f'{path}.gt.txt', 'w') as f:
-      f.write(str(res))
+  if ENABLE_LOGGING:
+    path = f"{sys.path[0]} + /../testdata/{path}/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
+    cv2.imwrite(f'{path}.{ext}', img)
+    if res:
+      with open(f'{path}.gt.txt', 'w') as f:
+        f.write(str(res))
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -111,8 +112,7 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI, config="--psm 6")
 
     # Write the data to testdata
-    if ENABLE_LOGGING:
-      writeData(crop, f'Score', data)
+    writeData(crop, f'Score', data)
 
     lines = data.strip().splitlines()
 
@@ -157,8 +157,7 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI, config='--psm 7')
 
     # Write the data to testdata
-    if ENABLE_LOGGING:
-      writeData(crop, f'Song', data)
+    writeData(crop, f'Song', data)
 
     # Return the song name and difficulty
     return (data.strip(), difficulty)
@@ -192,8 +191,7 @@ class ScoreAPI:
     data = data.strip()
 
     # Write the data to testdata
-    if ENABLE_LOGGING:
-      writeData(crop, f'MaxCombo', data)
+    writeData(crop, f'MaxCombo', data)
 
     # Return the max combo score, defaulting to 0 if the score is not a number
     return int(data) if data.isdecimal() else 0, index == 1
@@ -226,8 +224,7 @@ class ScoreAPI:
       data = data.strip()
 
       # Write the data to testdata
-      if ENABLE_LOGGING:
-        writeData(crop, f'FastSlow', data)
+      writeData(crop, f'FastSlow', data)
 
       res.append(int(data) if data.isdecimal() else -1)
 
@@ -255,8 +252,7 @@ class ScoreAPI:
     notes = self.getNotes(img)
 
     # Write the data to testdata
-    if ENABLE_LOGGING:
-      writeData(img, f'SongInfo', path='songs', ext='png')
+    writeData(img, f'SongInfo', path='songs', ext='png')
 
     songInfo = SongInfo(song, difficulty, rank, score, highScore, maxCombo, notes, fast, slow)
     return songInfo, img
