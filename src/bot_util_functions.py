@@ -138,7 +138,7 @@ def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: st
         if (bestScores[x]):
           score = (song['fast'], song['slow'])
           bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 and bestScores[x] else (-1, -1)
-          better = score >= bestScore if op == 'DESC' else score <= bestScore
+          better = sum(score) >= sum(bestScore) if op == 'DESC' else sum(score) <= sum(bestScore) 
           res[id] = (score, bestScore, better)
         else:
           res[id] = ((song['fast'], song['slow']), (-1, -1), True)

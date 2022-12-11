@@ -79,49 +79,52 @@ def songInfoToStr(song: SongInfo):
 
 def strToSongInfo(song: str):
   '''Converts a formatted string to a SongInfo object'''
-  songInfo = SongInfo()
-  lines = song.splitlines()
-  # Get song name and difficulty
-  songName, difficulty = lines[0].split(') ', 1)[1], lines[0].split(') ', 1)[0][1:]
-  songInfo.songName = songName
-  if not difficulty in difficulties:
-    return None, f"Invalid difficulty: {difficulty}. Must be in one of {difficulties}"
-  songInfo.difficulty = difficulty
-  # Get rank
-  rank = lines[1].split(': ', 1)[1]
-  if not rank in ranks:
-    return None, f"Invalid rank: {rank}. Must be in one of {ranks}"
-  songInfo.rank = rank
-  # Get score
-  score = lines[2].split(': ')[1]
-  songInfo.score = int(score) if score.isdecimal() else -1
-  # Get high score
-  highScore = lines[3].split(': ')[1]
-  songInfo.highScore = int(highScore) if highScore.isdecimal() else -1
-  # Get max combo
-  maxCombo = lines[4].split(': ')[1]
-  songInfo.maxCombo = int(maxCombo) if maxCombo.isdecimal() else -1
-  # Get note scores
-  notes = {}
-  for i in range(6, 6 + len(types)):
-    note = lines[i].split(': ')[0][2:]
-    if note not in types:
-      return None, f"Invalid note type: {note}. Must be in one of {types}"
-    score = lines[i].split(': ')[1]
-    notes[note] = int(score) if score.isdecimal() else -1
-  
-  # If any of the note types are missing, throw error
-  if not all(note in notes for note in types):
-    return None, f"Missing note types. Must have all of {types}"
-  songInfo.notes = notes
-  # Get fast and slow
-  if len(lines) > 6 + len(types):
-    fast = lines[6 + len(types)].split(': ')[1]
-    songInfo.fast = int(fast) if fast.isdecimal() else -1
-    slow = lines[7 + len(types)].split(': ')[1]
-    songInfo.slow = int(slow) if slow.isdecimal() else -1
+  try:
+    songInfo = SongInfo()
+    lines = song.splitlines()
+    # Get song name and difficulty
+    songName, difficulty = lines[0].split(') ', 1)[1], lines[0].split(') ', 1)[0][1:]
+    songInfo.songName = songName
+    if not difficulty in difficulties:
+      return None, f"Invalid difficulty: {difficulty}. Must be in one of {difficulties}"
+    songInfo.difficulty = difficulty
+    # Get rank
+    rank = lines[1].split(': ', 1)[1]
+    if not rank in ranks:
+      return None, f"Invalid rank: {rank}. Must be in one of {ranks}"
+    songInfo.rank = rank
+    # Get score
+    score = lines[2].split(': ')[1]
+    songInfo.score = int(score) if score.isdecimal() else -1
+    # Get high score
+    highScore = lines[3].split(': ')[1]
+    songInfo.highScore = int(highScore) if highScore.isdecimal() else -1
+    # Get max combo
+    maxCombo = lines[4].split(': ')[1]
+    songInfo.maxCombo = int(maxCombo) if maxCombo.isdecimal() else -1
+    # Get note scores
+    notes = {}
+    for i in range(6, 6 + len(types)):
+      note = lines[i].split(': ')[0][2:]
+      if note not in types:
+        return None, f"Invalid note type: {note}. Must be in one of {types}"
+      score = lines[i].split(': ')[1]
+      notes[note] = int(score) if score.isdecimal() else -1
+    
+    # If any of the note types are missing, throw error
+    if not all(note in notes for note in types):
+      return None, f"Missing note types. Must have all of {types}"
+    songInfo.notes = notes
+    # Get fast and slow
+    if len(lines) > 6 + len(types):
+      fast = lines[6 + len(types)].split(': ')[1]
+      songInfo.fast = int(fast) if fast.isdecimal() else -1
+      slow = lines[7 + len(types)].split(': ')[1]
+      songInfo.slow = int(slow) if slow.isdecimal() else -1
 
-  return songInfo, None
+    return songInfo, None
+  except:
+    return None, 'Invalid input.'
 
 def calculateImgDimensions(width, height):
   if width / height < 16 / 9:
