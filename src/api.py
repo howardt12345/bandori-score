@@ -8,7 +8,7 @@ import datetime
 
 from song_info import SongInfo
 from functions import fetchRanks, fetchNoteTypes, fetchDifficulties, fetchScoreIcon, fetchMaxCombo, fetchFastSlow, rescaleImage
-from consts import ranks, maxComboDim
+from consts import ranks, maxComboDim, ENABLE_LOGGING
 
 def writeData(img, prefix, res):
   path = f"{sys.path[0]} + /../testdata/data/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
@@ -77,7 +77,8 @@ class ScoreAPI:
       noteScores[type] = res
 
       # Write the data to testdata
-      writeData(crop, f'Note-{type}', res)
+      if ENABLE_LOGGING:
+        writeData(crop, f'Note-{type}', res)
     
     # Return the note type scores in a map
     return noteScores
@@ -107,7 +108,8 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI, config="--psm 6")
 
     # Write the data to testdata
-    writeData(crop, f'Score', data)
+    if ENABLE_LOGGING:
+      writeData(crop, f'Score', data)
 
     lines = data.strip().splitlines()
 
@@ -151,7 +153,8 @@ class ScoreAPI:
     data = pytesseract.image_to_string(ROI, config='--psm 7')
 
     # Write the data to testdata
-    writeData(crop, f'Song', data)
+    if ENABLE_LOGGING:
+      writeData(crop, f'Song', data)
 
     # Return the song name and difficulty
     return (data.strip(), difficulty)
@@ -185,7 +188,8 @@ class ScoreAPI:
     data = data.strip()
 
     # Write the data to testdata
-    writeData(crop, f'MaxCombo', data)
+    if ENABLE_LOGGING:
+      writeData(crop, f'MaxCombo', data)
 
     # Return the max combo score, defaulting to 0 if the score is not a number
     return int(data) if data.isdecimal() else 0, index == 1
@@ -218,7 +222,8 @@ class ScoreAPI:
       data = data.strip()
 
       # Write the data to testdata
-      writeData(crop, f'FastSlow', data)
+      if ENABLE_LOGGING:
+        writeData(crop, f'FastSlow', data)
 
       res.append(int(data) if data.isdecimal() else -1)
 
