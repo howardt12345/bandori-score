@@ -14,9 +14,11 @@ def writeData(img, prefix, res='', path='data', ext='tif'):
   if ENABLE_LOGGING:
     path = f"{sys.path[0]} + /../testdata/{path}/{prefix}-{str(datetime.datetime.now()).split('.')[0].replace(':', '-')}"
     cv2.imwrite(f'{path}.{ext}', img)
-    if res:
+    try:
       with open(f'{path}.gt.txt', 'w') as f:
         f.write(str(res))
+    except:
+      pass
 
 class ScoreAPI:
   '''ScoreAPI class so that templates only need to be initialized once'''
@@ -71,7 +73,7 @@ class ScoreAPI:
       crop = image[tl_y:br_y, tl_x:br_x]
       image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
       blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
-            cv2.THRESH_BINARY, 11, 2)
+            cv2.THRESH_BINARY, 9, 2)
 
       # Read the score of the note type from the image
       ROI = blackAndWhiteImage
@@ -104,7 +106,7 @@ class ScoreAPI:
     crop = image[tl_y:br_y, tl_x:br_x]
     image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
-          cv2.THRESH_BINARY, 11, 2)
+          cv2.THRESH_BINARY, 9, 2)
 
     # Read the score text from the image
     ROI = blackAndWhiteImage
@@ -148,8 +150,7 @@ class ScoreAPI:
     # Make image black and white for OCR
     crop = image[tl_y:br_y, tl_x:br_x]
     image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
-          cv2.THRESH_BINARY, 11, 2)
+    (_, blackAndWhiteImage) = cv2.threshold(image_gray, 150, 255, cv2.THRESH_BINARY)
 
     # Read the song name from the image
     ROI = blackAndWhiteImage
@@ -216,7 +217,7 @@ class ScoreAPI:
       crop = image[tl_y:br_y, tl_x:br_x]
       image_gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
       blackAndWhiteImage = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,\
-          cv2.THRESH_BINARY, 11, 2)
+          cv2.THRESH_BINARY, 9, 2)
       # Read the fast/slow score from the image
       ROI = blackAndWhiteImage
       data = pytesseract.image_to_string(ROI, config="--psm 7 digits")

@@ -4,7 +4,7 @@ ranks = ['SS', 'S', 'A', 'B', 'C', 'D']
 types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
 ratios = [2.115, 2.78, 2.85, 4.37, 3.9]
 # The top and bottom tolerances of the note type bounding box
-tolerances = [(0, -2), (0, 0), (-1, 0), (1, 3), (-1, 5)]
+tolerances = [(2, 0), (0, 0), (-1, 0), (2, 3), (-1, 5)]
 maxComboDim = [((5, 10), (-5, 65)), ((0, 5), (0, 47))]
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
 tags = ['live', 'multilive', 'event']
