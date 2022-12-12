@@ -41,50 +41,58 @@ bot = commands.Bot(command_prefix='$', intents=intents, help_command=None)
 scoreAPI = ScoreAPI(draw=True)
 db = Database()
 
+async def dbCommand(ctx: commands.Context, cmd: any):
+  status = await db.ping_server()
+  if not status:
+    await ctx.send("Unable to access the database")
+    return
+  else:
+    await cmd
+
 @bot.command(aliases=commandAliases['newScores'])
 async def newScores(ctx: commands.Context, defaultTag: str = "", compare: bool = True):
   msgLog(ctx)
-  await bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag)
+  await dbCommand(ctx, bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag))
 
 @bot.command(aliases=commandAliases['getScores'])
 async def getScores(ctx: commands.Context, *, query: str = ""):
   msgLog(ctx)
-  await bot_commands.getScores(db, ctx, query)
+  await dbCommand(ctx, bot_commands.getScores(db, ctx, query))
 
 @bot.command(aliases=commandAliases['editScore'])
 async def editScore(ctx: commands.Context, id: str):
   msgLog(ctx)
-  await bot_commands.editScore(bot, db, ctx, id)
+  await dbCommand(ctx, bot_commands.editScore(bot, db, ctx, id))
 
 @bot.command(aliases=commandAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
-  await bot_commands.deleteScore(bot, db, ctx, id)
+  await dbCommand(ctx, bot_commands.deleteScore(db, ctx, id))
 
 @bot.command(aliases=commandAliases['manualInput'])
 async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   msgLog(ctx)
-  await bot_commands.manualInput(bot, db, ctx, defaultTag)
+  await dbCommand(ctx, bot_commands.manualInput(db, ctx, defaultTag))
 
 @bot.command(aliases=commandAliases['getBest'])
 async def getBest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
   msgLog(ctx)
-  await bot_commands.getBest(db, ctx, songName, difficulty, tag, query)
+  await dbCommand(ctx, bot_commands.getBest(db, ctx, songName, difficulty, tag, query))
 
 @bot.command(aliases=commandAliases['listSongs'])
 async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False):
   msgLog(ctx)
-  await bot_commands.getSongCounts(db, ctx, difficulty, tag, asFile)
+  await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, asFile))
 
 @bot.command(aliases=commandAliases['getSongStats'])
 async def getSongStats(ctx: commands.Context, songName: str = "", difficulty: str = "", tag: str = "", matchExact = False, showMaxCombo = True, showSongNames = False, interpolate = False):
   msgLog(ctx)
-  await bot_commands.getSongStats(db, ctx, songName, difficulty, tag, matchExact, showMaxCombo, showSongNames, interpolate)
+  await dbCommand(ctx, bot_commands.getSongStats(db, ctx, songName, difficulty, tag, matchExact, showMaxCombo, showSongNames, interpolate))
 
 @bot.command(aliases=commandAliases['getRecent'])
 async def getRecent(ctx: commands.Context, limit: int = 1, tag: str = ""):
   msgLog(ctx)
-  await bot_commands.getRecent(db, ctx, limit, tag)
+  await dbCommand(ctx, bot_commands.getRecent(db, ctx, limit, tag))
 
 @bot.command(aliases=commandAliases['bestdoriGet'])
 async def bestdoriGet(ctx: commands.Context, *, query: str = ""):
@@ -114,5 +122,13 @@ async def version(ctx: commands.Context, version: str, ping: bool = False):
 async def announcements(ctx: commands.Context, ping: bool = False):
   msgLog(ctx)
   await bot_commands_admin.announcements(ctx, ping)
+
+@bot.command()
+@has_permissions(administrator=True)
+async def ping(ctx: commands.Context):
+  msgLog(ctx)
+  await ctx.send("Pong!")
+  dbStatus = await db.ping_server()
+  await ctx.send(f"Database: {'Connected' if dbStatus else 'Disconnected'}")
 
 bot.run(TOKEN)
