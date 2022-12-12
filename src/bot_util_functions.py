@@ -121,11 +121,11 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   return tag
 
-def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: str):
+async def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: str):
   '''Compare the song with the best rated songs in the database'''
   res = {}
   user = ctx.message.author
-  bestScores = db.get_best_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
+  bestScores = await db.get_best_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
   for x, (id, value) in enumerate(bestDict.items()):
     _, op, _ = value
     if id == "notes.Perfect":

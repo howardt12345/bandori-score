@@ -106,7 +106,7 @@ async def newScores(
 
     if not output is None:
       if compare:
-        compareRes = compareSongWithBest(ctx, db, output.toDict(), tag)
+        compareRes = await compareSongWithBest(ctx, db, output.toDict(), tag)
       res = await db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
@@ -263,7 +263,7 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
     \nSong name and difficulty must be provided and query must be one of: {bestDict.keys()}''')
     return
   user = ctx.message.author
-  res = await db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else db.get_best_songs(str(user.id), songName, difficulty, tag)
+  res = await db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else await db.get_best_songs(str(user.id), songName, difficulty, tag)
   scores = res[0] if res and query else res
   if not scores or len(scores) == 0:
     await ctx.send(f'No best {query} entry for "{songName}" {f"({difficulty})" if difficulty else ""}')

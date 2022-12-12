@@ -118,11 +118,11 @@ class Database:
     for _, (key, value) in enumerate(bestDict.items()):
       if key == 'fastSlow':
         songs = self.get_fast_slow(userId, q)
-        lst = list(songs)
+        lst = await songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
       else:
         songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
-        lst = songs.to_list(length=None)
+        lst = await songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
 
     await self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
