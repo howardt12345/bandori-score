@@ -29,6 +29,9 @@ path = f"{sys.path[0]} + /../logs/{filename}"
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO, filename=path, filemode='a')
 logging.getLogger().addHandler(logging.StreamHandler())
 
+if not dev:
+  sys.tracebacklimit = 0
+
 # Create bot
 intents = discord.Intents.default()
 intents.message_content = True
