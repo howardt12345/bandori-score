@@ -1,6 +1,7 @@
 
 import datetime
 from pymongo import MongoClient, ASCENDING, DESCENDING, TEXT, errors
+import motor.motor_asyncio as motor
 from dotenv import load_dotenv
 import os
 import re
@@ -15,14 +16,14 @@ from consts import *
 class Database:
   def __init__(self):
     load_dotenv()
-    self.client = MongoClient(os.getenv('ATLAS_URI'))
+    self.client = motor.AsyncIOMotorClient(os.getenv('ATLAS_URI'), serverSelectionTimeoutMS = 2000)
     self.db = self.client[os.getenv('DB_NAME')]
     logging.info("Connected to the MongoDB database!")
     self.bestdori = BestdoriAPI()
 
 
-  def create_song(self, userId: str, song: SongInfo, tag: str):
-    self.db[userId]['songs'].create_index([
+  async def create_song(self, userId: str, song: SongInfo, tag: str):
+    await self.db[userId]['songs'].create_index([
       ('songName', TEXT), 
       ('tag', ASCENDING),
       ('difficulty', DESCENDING), 
@@ -44,37 +45,37 @@ class Database:
     songDict['tag'] = tags.index(tag)
 
     try:
-      new_song = self.db[userId]['songs'].insert_one(songDict)
-      created_song = self.db[userId]['songs'].find_one(
+      new_song = await self.db[userId]['songs'].insert_one(songDict)
+      created_song = await self.db[userId]['songs'].find_one(
         {"_id": new_song.inserted_id}
       )
-      self.log(userId, f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
+      await self.log(userId, f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
       return created_song
     except errors.DuplicateKeyError:
-      self.log(userId, f"POST: User {userId} tried to create a duplicate song: \n{song}")
+      await self.log(userId, f"POST: User {userId} tried to create a duplicate song: \n{song}")
       return -1
     except Exception as e:
-      self.log(userId, f"POST: User {userId} tried to create a song but failed: \n{song}")
+      await self.log(userId, f"POST: User {userId} tried to create a song but failed: \n{song}")
       return None
 
 
-  def get_songs(self, userId: str):
+  async def get_songs(self, userId: str):
     songs = self.db[userId]['songs'].find()
-    self.log(userId, f"GET: User {userId} got all songs")
-    return list(songs)
+    await self.log(userId, f"GET: User {userId} got all songs")
+    return await songs.to_list(length=None)
 
 
-  def get_song(self, userId: str, songId: str):
+  async def get_song(self, userId: str, songId: str):
     try: 
       song = self.db[userId]['songs'].find_one({'_id': ObjectId(songId)})
-      self.log(userId, f"GET: User {userId} got song with ID {songId}")
-      return song
+      await self.log(userId, f"GET: User {userId} got song with ID {songId}")
+      return await song
     except Exception as e:
-      self.log(userId, f"GET: User {userId} tried to get song with ID {songId} but failed")
+      await self.log(userId, f"GET: User {userId} tried to get song with ID {songId} but failed")
       raise e
 
 
-  def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = "", matchExact=False):
+  async def get_scores_of_song(self, userId: str, songName: str, difficulty: str = "", tag: str = "", matchExact=False):
     q = {
       'songName': re.compile('^' + re.escape(songName) + '$' if matchExact else re.escape(songName), re.IGNORECASE)
     }
@@ -83,11 +84,11 @@ class Database:
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
     scores = self.db[userId]['songs'].find(q).sort('score', ASCENDING) 
-    self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
-    return list(scores)
+    await self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
+    return await scores.to_list(length=None)
 
 
-  def get_song_with_best(self, userId: str, songName: str, difficulty: str, tag: str, query: str, order: str):
+  async def get_song_with_best(self, userId: str, songName: str, difficulty: str, tag: str, query: str, order: str):
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
@@ -100,11 +101,11 @@ class Database:
       songs = self.get_fast_slow(userId, q)
     else: 
       songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
-    self.log(userId, f'GET: User {userId} got best {query} score with query text "{songName}"')
-    lst = list(songs)
+    await self.log(userId, f'GET: User {userId} got best {query} score with query text "{songName}"')
+    lst = await songs.to_list(length=None)
     return lst if len(lst) > 0 else None
 
-  def get_best_songs(self, userId: str, songName: str, difficulty: str, tag: str):
+  async def get_best_songs(self, userId: str, songName: str, difficulty: str, tag: str):
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
@@ -121,13 +122,13 @@ class Database:
         res.extend(lst if len(lst) > 0 else [None])
       else:
         songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
-        lst = list(songs)
+        lst = songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
 
-    self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
+    await self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
     return res
 
-  def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):
+  async def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):
     songDict = song.toDict()
     if tag and tag in tags:
       songDict['tag'] = tags.index(tag)
@@ -136,17 +137,17 @@ class Database:
       {"$set": songDict}
     )
 
-    updated_song = self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
-    self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
+    updated_song = await self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
+    await self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
     return updated_song
 
 
-  def delete_song(self, userId: str, songId: str):
-    self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
-    self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}")
+  async def delete_song(self, userId: str, songId: str):
+    await self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
+    await self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}")
 
 
-  def get_song_counts(self, userId: str, difficulty: str, tag: str):
+  async def list_songs(self, userId: str, difficulty: str, tag: str):
     q = {}
     if difficulty and difficulty in difficulties:
       q['difficulty'] = difficulties.index(difficulty)
@@ -161,17 +162,17 @@ class Database:
         }
       },
     ])
-    self.log(userId, f"GET: User {userId} got song counts")
-    return list(song_counts)
+    await self.log(userId, f"GET: User {userId} got song counts")
+    return await song_counts.to_list(length=None)
 
   
-  def get_recent_songs(self, userId: str, limit: int, tag: str = ""):
+  async def get_recent_songs(self, userId: str, limit: int, tag: str = ""):
     q = {}
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
     recent_songs = self.db[userId]['songs'].find(q).sort('_id', DESCENDING).limit(limit)
-    self.log(userId, f"GET: User {userId} got recent songs")
-    return list(recent_songs)
+    await self.log(userId, f"GET: User {userId} got recent songs")
+    return await recent_songs.to_list(length=None)
 
   
   def get_fast_slow(self, userId: str, q: dict):
@@ -213,14 +214,21 @@ class Database:
       {'$limit': 1}
     ])
 
-  def log(self, userId: str, message: str, songId: str = ""):
-    self.db[userId]['log'].insert_one({
+  async def log(self, userId: str, message: str, songId: str = ""):
+    await self.db[userId]['log'].insert_one({
       "message": message, 
       "timestamp": datetime.datetime.now(),
       "songId": songId,
       "userId": userId
     })
     logging.info(message)
+  
+  async def ping_server(self):
+    try:
+      await self.client.server_info()
+      return True
+    except:
+      return False
 
 
   @staticmethod

@@ -107,7 +107,7 @@ async def newScores(
     if not output is None:
       if compare:
         compareRes = compareSongWithBest(ctx, db, output.toDict(), tag)
-      res = db.create_song(str(user.id), output, tag)
+      res = await db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
         msgText = f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`'
@@ -134,10 +134,10 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
     return
   else:
     try:
-      scores = db.get_song(str(user.id), query.strip())
+      scores = await db.get_song(str(user.id), query.strip())
     except Exception as e:
       logging.info(e)
-      scores = db.get_scores_of_song(str(user.id), query.strip())
+      scores = await db.get_scores_of_song(str(user.id), query.strip())
 
   if not scores or len(scores) == 0:
     await ctx.send(f'No scores found for "{query}"')
@@ -154,7 +154,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
   user = ctx.message.author
 
   # Fetch song info of id
-  score = db.get_song(str(user.id), id)
+  score = await db.get_song(str(user.id), id)
   if not score:
     await ctx.send(f'No score found with id `{id}`')
     return
@@ -168,7 +168,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
     tag = None
   if newSong:
     # Update the song
-    db.update_song(str(user.id), id, newSong, tag)
+    await db.update_song(str(user.id), id, newSong, tag)
     await ctx.send(f'Score with id `{id}` updated')
   else:
     await ctx.send('No changes made')
@@ -178,7 +178,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
   user = ctx.message.author
 
   # Fetch song info of id
-  score = db.get_song(str(user.id), id)
+  score = await db.get_song(str(user.id), id)
   if not score:
     await ctx.send(f'No score found with id `{id}`')
     return
@@ -203,7 +203,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
   else:
     if str(reaction.emoji) == '✅':
       # Delete
-      db.delete_song(str(user.id), id)
+      await db.delete_song(str(user.id), id)
       await ctx.send(f'Deleted score `{id}`')
     elif str(reaction.emoji) == '❌':
       # Ignore
@@ -240,7 +240,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       if song:
         if wantTag:
           tag = await promptTag(bot, ctx)
-        res = db.create_song(str(user.id), song, tag)
+        res = await db.create_song(str(user.id), song, tag)
         if res and res != -1:
           id = res.get('_id', '')
           msgText = f'({song.difficulty}) {song.songName} with a score of {song.score} added to database with tag `{tag}`'
@@ -263,7 +263,7 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
     \nSong name and difficulty must be provided and query must be one of: {bestDict.keys()}''')
     return
   user = ctx.message.author
-  res = db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else db.get_best_songs(str(user.id), songName, difficulty, tag)
+  res = await db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else db.get_best_songs(str(user.id), songName, difficulty, tag)
   scores = res[0] if res and query else res
   if not scores or len(scores) == 0:
     await ctx.send(f'No best {query} entry for "{songName}" {f"({difficulty})" if difficulty else ""}')
@@ -281,10 +281,10 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
         await ctx.send(f"No best {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}")
 
 
-async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):
+async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):
   '''Gets the number of songs in the database'''
   user = ctx.message.author
-  counts = db.get_song_counts(str(user.id), difficulty, tag)
+  counts = await db.list_songs(str(user.id), difficulty, tag)
   counts.sort(key=lambda x: x['_id'].lower())
   totalCount = sum([x['count'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
@@ -314,7 +314,7 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str = "", 
   '''Gets the stats of a song given a song name and difficulty'''
   user = ctx.message.author
   await ctx.send(f"Getting stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
-  stats = db.get_scores_of_song(str(user.id), songName, difficulty, tag, matchExact)
+  stats = await db.get_scores_of_song(str(user.id), songName, difficulty, tag, matchExact)
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
@@ -327,7 +327,7 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str = "", 
 async def getRecent(db: Database, ctx: commands.Context, limit: int, tag: str = ""):
   '''Gets the most recent songs added to the database'''
   user = ctx.message.author
-  songs = db.get_recent_songs(str(user.id), limit, tag)
+  songs = await db.get_recent_songs(str(user.id), limit, tag)
   if len(songs) == 0:
     await ctx.send(f'No recent songs found')
     return
