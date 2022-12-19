@@ -49,61 +49,73 @@ async def dbCommand(ctx: commands.Context, cmd: any):
   else:
     await cmd
 
+# Adds a new score to the user's scores in the database
 @bot.command(aliases=commandAliases['newScores'])
 async def newScores(ctx: commands.Context, defaultTag: str = "", compare: bool = True):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.newScores(scoreAPI, bot, db, ctx, compare, defaultTag))
 
+# Gets the user's scores from the database given a query
 @bot.command(aliases=commandAliases['getScores'])
 async def getScores(ctx: commands.Context, *, query: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getScores(db, ctx, query))
 
+# Gets the user's scores from the database given an id
 @bot.command(aliases=commandAliases['editScore'])
 async def editScore(ctx: commands.Context, id: str):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.editScore(bot, db, ctx, id))
 
+# Gets the user's scores from the database given an id
 @bot.command(aliases=commandAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.deleteScore(db, ctx, id))
 
+# Lets the user manually input a score
 @bot.command(aliases=commandAliases['manualInput'])
 async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.manualInput(db, ctx, defaultTag))
 
+# Gets the user's best scores of categories defined in bestDict
 @bot.command(aliases=commandAliases['getBest'])
 async def getBest(ctx: commands.Context, songName: str = None, difficulty: str = None, tag: str = "", query: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getBest(db, ctx, songName, difficulty, tag, query))
 
+# Lists all the songs of the user
 @bot.command(aliases=commandAliases['listSongs'])
 async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, asFile))
 
+# Generates a graph of the user's scores of a song
 @bot.command(aliases=commandAliases['getSongStats'])
 async def getSongStats(ctx: commands.Context, songName: str = "", difficulty: str = "", tag: str = "", matchExact = False, showMaxCombo = True, showSongNames = False, interpolate = False):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getSongStats(db, ctx, songName, difficulty, tag, matchExact, showMaxCombo, showSongNames, interpolate))
 
+# Get the user's most recent song(s)
 @bot.command(aliases=commandAliases['getRecent'])
 async def getRecent(ctx: commands.Context, limit: int = 1, tag: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getRecent(db, ctx, limit, tag))
 
+# Gets a song's information from the Bestdori API
 @bot.command(aliases=commandAliases['bestdoriGet'])
 async def bestdoriGet(ctx: commands.Context, *, query: str = ""):
   msgLog(ctx)
   await bot_commands.bestdoriGet(db, ctx, query)
 
+# Help command
 @bot.command()
 async def help(ctx: commands.Context, command: str = ""):
   msgLog(ctx)
   await bot_commands.help(ctx, command)
 
+# About TP command
 @bot.command(aliases=commandAliases['aboutTP'])
 async def aboutTP(ctx: commands.Context):
   msgLog(ctx)
