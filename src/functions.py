@@ -10,6 +10,18 @@ from song_info import SongInfo
 
 ASSETS_DIR = f'{sys.path[0]} + /../assets'
 
+def getDifficulty(d):
+  return next(i for i,v in enumerate(difficulties) if v.lower() == d)
+
+def hasDifficulty(d):
+  return d.lower() in (x.lower() for x in difficulties)
+
+def getTag(t):
+  return next(i for i,v in enumerate(tags) if v.lower() == t)
+
+def hasTag(t):
+  return t.lower() in (x.lower() for x in tags)
+
 def fetchRanks(path):
   '''Fetches the templates of the different ranks'''
   # List of ranks
@@ -85,7 +97,7 @@ def strToSongInfo(song: str):
     # Get song name and difficulty
     songName, difficulty = lines[0].split(') ', 1)[1], lines[0].split(') ', 1)[0][1:]
     songInfo.songName = songName
-    if not difficulty in difficulties:
+    if not hasDifficulty(difficulty):
       return None, f"Invalid difficulty: {difficulty}. Must be in one of {difficulties}"
     songInfo.difficulty = difficulty
     # Get rank
