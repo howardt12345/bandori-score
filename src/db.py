@@ -154,7 +154,9 @@ class Database:
   async def list_songs(self, userId: str, difficulty: str, tag: str):
     q = {}
     if difficulty and difficulty in difficulties:
-      q['difficulty'] = difficulties.index(difficulty)
+      q['difficulty'] = d = difficulties.index(difficulty)
+    else:
+      d = 3
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
     song_counts = self.db[userId]['songs'].aggregate([
@@ -170,13 +172,19 @@ class Database:
         'maxCombo': 1,
         'notes': 1,
         'TP': 1,
-        'fullCombo': {'$sum': ['$notes.Perfect', '$notes.Great']}
+        'fullComboExpert': {
+          '$cond': [
+            {'$eq': ['$difficulty', d]},
+            {'$eq': [{'$sum': ['$notes.Perfect', '$notes.Great']}, '$maxCombo']},
+            False
+          ],
+        },
       }},
       {
         "$group": {
           "_id": "$songName",
           "count": {"$sum": 1},
-          "hasFullCombo": {'$expr': {'$eq': ['$fullCombo', '$maxCombo']}}
+          "fullComboExpert": {'$max': '$fullComboExpert'}
         }
       },
     ])
@@ -234,8 +242,6 @@ class Database:
 
   def get_full_combo_songs(self, userId: str, q: dict):
     q1 = q.copy()
-    q1['maxCombo'] = {'$exists': True}
-    q1['notes'] = {'$exists': True}
     return self.db[userId]['songs'].aggregate([
       {'$match': q1},
       { '$unwind': '$notes'},
@@ -267,7 +273,7 @@ class Database:
       {'$match': {'$expr': {'$eq': ['$fullCombo', '$maxCombo']}}},
       {'$sort': {'fullCombo': DESCENDING}}
     ])
-
+    
   async def log(self, userId: str, message: str, songId: str = ""):
     await self.db[userId]['log'].insert_one({
       "message": message, 

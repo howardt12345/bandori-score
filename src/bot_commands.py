@@ -287,12 +287,14 @@ async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: s
   counts = await db.list_songs(str(user.id), difficulty, tag)
   counts.sort(key=lambda x: x['_id'].lower())
   totalCount = sum([x['count'] for x in counts])
+  totalFC = sum([x['fullComboExpert'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
-  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
+  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({len(counts)} songs, {totalCount} scores):\n"
   for count in counts:
     dbName = count['_id']
     name = db.bestdori.closestSongName(dbName)
-    msgText += f'{name if name else dbName} {f"(`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
+    msgText += f'{"✅" if count["fullComboExpert"] else "❌"}{name if name else dbName}{f" (`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
+  msgText += f'\nTotal full combo {difficulty if difficulty else "Expert"} songs: {totalFC}'
 
   if asFile:
     buf = StringIO(msgText)
