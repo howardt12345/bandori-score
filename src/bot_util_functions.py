@@ -55,12 +55,10 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
         newSong = ns
-        pass
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
         await ctx.send('Ignoring this song')
-        pass
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:
@@ -85,12 +83,10 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
         wantTag = True
-        pass
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
         await ctx.send('Using default tag')
-        pass
 
   return newSong, wantTag
 
@@ -121,55 +117,79 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   return tag
 
-async def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: str):
+async def compareSongWithBest(ctx: commands.Context, db: Database, song: SongInfo, tag: str):
   '''Compare the song with the best rated songs in the database'''
   res = {}
   user = ctx.message.author
-  bestScores = await db.get_best_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
+  bestScores = await db.get_best_songs(str(user.id), song.songName, song.difficulty, tag)
   for x, (id, value) in enumerate(bestDict.items()):
     _, op, _ = value
     if id == "notes.Perfect":
-      score = song['notes']['Perfect']
+      score = song.notes['Perfect']
       bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 and bestScores[x] else 0
       better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
       res[id] = (score, bestScore, better)
-    elif id == "fastSlow":
-      if ('fast' in song and 'slow' in song):
-        if (bestScores[x]):
-          score = (song['fast'], song['slow'])
-          bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 and bestScores[x] else (-1, -1)
-          better = sum(score) >= sum(bestScore) if op == 'DESC' else sum(score) <= sum(bestScore) 
-          res[id] = (score, bestScore, better)
-        else:
-          res[id] = ((song['fast'], song['slow']), (-1, -1), True)
-    else:
-      score = song[id]
-      bestScore = bestScores[x][id] if len(bestScores) > 0 and bestScores[x] else 0 if op == 'DESC' else -1
-      better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+      continue
+
+    if id == "fastSlow":
+      if not song.hasFastSlow():
+        continue
+
+      if (bestScores[x]):
+        score = (song.fast, song.slow)
+        bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 and bestScores[x] else (-1, -1)
+        better = sum(score) >= sum(bestScore) if op == 'DESC' else sum(score) <= sum(bestScore) 
+        res[id] = (score, bestScore, better)
+      else:
+        res[id] = ((song.fast, song.slow), (-1, -1), True)
+      continue
+
+    if id == "fullCombo":
+      score = song.isFullCombo()
+      bestScore = bestScores[x] if len(bestScores) > 0 and bestScores[x] else False
+      better = score
       res[id] = (score, bestScore, better)
+      continue
+
+    score = song.toDict()[id]
+    bestScore = bestScores[x][id] if len(bestScores) > 0 and bestScores[x] else 0 if op == 'DESC' else -1
+    better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+    res[id] = (score, bestScore, better)
   return res
 
 async def printSongCompare(ctx: commands.Context, bestScores: dict):
   '''logging.info the comparison of the song with the best rated songs in the database'''
   if bestScores is None:
     await ctx.send('Failed to compare song with other entries')
-  else:
-    def format(category, score):
-      if category == 'TP':
-        return f'{score*100:.4f}%'
-      elif category == 'rank':
-        return f'{ranks[score]}'
-      else:
-        return score
-    msg = 'Score analysis:\n'
-    for _, (id, value) in enumerate(bestDict.items()):
-      name, _, _ = value
-      if id in bestScores:
-        score, bestScore, better = bestScores[id]
-        fscore, fbestScore = format(id, score), format(id, bestScore)
-        if better:
-          msg += f'✅ {name} >= best ({fscore} >= {fbestScore})\n'
-        else:
-          msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
-    await ctx.send(msg)
+    return
+
+  def format(category, score):
+    if category == 'TP':
+      return f'{score*100:.4f}%'
+    elif category == 'rank':
+      return f'{ranks[score]}'
+    else:
+      return score
   
+  msg = 'Score analysis:\n'
+  for _, (id, value) in enumerate(bestDict.items()):
+    name, _, _ = value
+    if not id in bestScores:
+      continue
+
+    if id == "fullCombo":
+      score, bestScore, better = bestScores[id]
+      fscore, fbestScore = format(id, score), format(id, bestScore)
+      if better:
+        msg += f'✅ {name}! ({f"has {name} before" if fbestScore else f"first {name}"})\n'
+      else:
+        msg += f'❌ Not {name}{f" has {name} before" if fbestScore else ""}"\n'
+      continue
+
+    score, bestScore, better = bestScores[id]
+    fscore, fbestScore = format(id, score), format(id, bestScore)
+    if better:
+      msg += f'✅ {name} >= best ({fscore} >= {fbestScore})\n'
+    else:
+      msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
+  await ctx.send(msg)

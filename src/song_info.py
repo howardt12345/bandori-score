@@ -84,6 +84,12 @@ class SongInfo:
   def hasFastSlow(self):
     return self.fast != -1 or self.slow != -1
 
+  def isFullCombo(self):
+    return self.notes['Great'] + self.notes['Perfect'] == self.maxCombo
+  
+  def isAllPerfect(self):
+    return self.notes['Perfect'] == self.maxCombo
+
   def getSongData(self, bd: BestdoriAPI):
     _, song, _ = bd.getSong(self.songName)
     return song
