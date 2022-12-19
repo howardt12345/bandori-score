@@ -144,8 +144,11 @@ async def compareSongWithBest(ctx: commands.Context, db: Database, song: SongInf
         res[id] = ((song.fast, song.slow), (-1, -1), True)
       continue
 
-    if id == "fullCombo":
-      score = song.isFullCombo()
+    if id == "fullCombo" or id == "allPerfect":
+      if id == "allPerfect":
+        score = song.isAllPerfect()
+      else:
+        score = song.isFullCombo()
       bestScore = bestScores[x] if len(bestScores) > 0 and bestScores[x] else False
       better = score
       res[id] = (score, bestScore, better)
@@ -165,7 +168,7 @@ async def printSongCompare(ctx: commands.Context, bestScores: dict):
 
   def format(category, score):
     if category == 'TP':
-      return f'{score*100:.4f}%'
+      return f'{score*100:.5f}%'
     elif category == 'rank':
       return f'{ranks[score]}'
     else:
@@ -177,13 +180,13 @@ async def printSongCompare(ctx: commands.Context, bestScores: dict):
     if not id in bestScores:
       continue
 
-    if id == "fullCombo":
+    if id == "fullCombo" or id == "allPerfect":
       score, bestScore, better = bestScores[id]
       fscore, fbestScore = format(id, score), format(id, bestScore)
       if better:
-        msg += f'✅ {name}! ({f"has {name} before" if fbestScore else f"first {name}"})\n'
+        msg += f'✅ {name}! ({f"✅has {name}" if fbestScore else f"❌no {name} yet"})\n'
       else:
-        msg += f'❌ Not {name}{f" has {name} before" if fbestScore else ""}"\n'
+        msg += f'❌ Not {name} ({f"✅has {name}" if fbestScore else f"❌no {name} yet"})\n'
       continue
 
     score, bestScore, better = bestScores[id]

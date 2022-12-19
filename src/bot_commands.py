@@ -24,8 +24,8 @@ from bot_help import getCommandHelp
 async def newScores(
   scoreAPI: ScoreAPI, 
   bot: commands.Bot, 
-  db: Database, ctx: 
-  commands.Context, 
+  db: Database, 
+  ctx: commands.Context, 
   compare: bool, 
   defaultTag: str = ""
 ):
@@ -281,20 +281,26 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
         await ctx.send(f"No best {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}")
 
 
-async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):
+async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False, allPerfect=False):
   '''Gets the number of songs in the database'''
   user = ctx.message.author
   counts = await db.list_songs(str(user.id), difficulty, tag)
   counts.sort(key=lambda x: x['_id'].lower())
   totalCount = sum([x['count'] for x in counts])
   totalFC = sum([x['fullCombo'] for x in counts])
+  if allPerfect: totalAP = sum([x['allPerfect'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({len(counts)} songs, {totalCount} scores):\n"
   for count in counts:
     dbName = count['_id']
     name = db.bestdori.closestSongName(dbName)
-    msgText += f'{"✅" if count["fullCombo"] else "❌"}{name if name else dbName}{f" (`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
-  msgText += f'\nTotal full combo {difficulty if difficulty else "Expert"} songs: {totalFC}'
+    msgText += f'{"✅" if count["fullCombo"] else "❌"}'
+    if allPerfect: msgText += f'{"☑️" if count["allPerfect"] else "❌"}'
+    msgText += f'{name if name else dbName}{f" (`{dbName}` in database)" if name != dbName else ""}: {count["count"]}'
+    msgText += "\n"
+
+  msgText += f'\nSongs that have a full combo entry in {difficulty if difficulty else "Expert"}: {totalFC}'
+  if allPerfect: msgText += f'\nSongs that have an all perfect entry: {totalAP}'
 
   if asFile:
     buf = StringIO(msgText)

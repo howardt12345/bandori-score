@@ -120,8 +120,11 @@ class Database:
         songs = self.get_fast_slow(userId, q)
         lst = await songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
-      elif key == 'fullCombo':
-        songs = self.get_full_combo_songs(userId, q)
+      elif key == 'fullCombo' or key == 'allPerfect':
+        if key == 'allPerfect':
+          songs = self.get_all_perfect_songs(userId, q)
+        else:
+          songs = self.get_full_combo_songs(userId, q)
         lst = await songs.to_list(length=None)
         res.extend([len(lst) > 0])
       else:
@@ -172,19 +175,21 @@ class Database:
         'maxCombo': 1,
         'notes': 1,
         'TP': 1,
-        'fullComboExpert': {
+        'fullCombo': {
           '$cond': [
             {'$eq': ['$difficulty', d]},
             {'$eq': [{'$sum': ['$notes.Perfect', '$notes.Great']}, '$maxCombo']},
             False
           ],
         },
+        'allPerfect': {'$eq': ['$notes.Perfect', '$maxCombo']},
       }},
       {
         "$group": {
           "_id": "$songName",
           "count": {"$sum": 1},
-          "fullComboExpert": {'$max': '$fullComboExpert'}
+          "fullCombo": {'$max': '$fullCombo'},
+          "allPerfect": {'$max': '$allPerfect'},
         }
       },
     ])
@@ -273,7 +278,28 @@ class Database:
       {'$match': {'$expr': {'$eq': ['$fullCombo', '$maxCombo']}}},
       {'$sort': {'fullCombo': DESCENDING}}
     ])
-    
+
+  def get_all_perfect_songs(self, userId: str, q: dict):
+    q1 = q.copy()
+    return self.db[userId]['songs'].aggregate([
+      {'$match': q1},
+      { '$unwind': '$notes'},
+      {'$group': {
+        '_id': '$_id',
+        'songName': {'$first': '$songName'},
+        'difficulty': {'$first': '$difficulty'},
+        'tag': {'$first': '$tag'},
+        'rank': {'$first': '$rank'},
+        'score': {'$first': '$score'},
+        'highScore': {'$first': '$highScore'},
+        'maxCombo': {'$first': '$maxCombo'},
+        'notes': {'$first': '$notes'},
+        'TP': {'$first': '$TP'},
+      }},
+      {'$match': {'$expr': {'$eq': ['$notes.Perfect', '$maxCombo']}}},
+      {'$sort': {'score': DESCENDING}}
+    ])
+
   async def log(self, userId: str, message: str, songId: str = ""):
     await self.db[userId]['log'].insert_one({
       "message": message, 

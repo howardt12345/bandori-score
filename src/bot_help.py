@@ -104,6 +104,12 @@ commandParams = {
       'default': False,
       'required': False,
       'help': 'Whether to send the song list as a file instead of as discord messages'
+    },
+    'allPerfect': {
+      'type': bool,
+      'default': False,
+      'required': False,
+      'help': 'Whether to show whether songs have all perfect scores'
     }
   },
   'getSongStats': {

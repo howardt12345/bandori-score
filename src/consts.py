@@ -25,6 +25,7 @@ bestDict = {
   'TP': ('Technical Points', 'DESC', False),
   'fastSlow': ('Fast/Slow', 'ASC', False),
   'fullCombo': ('Full Combo', 'DESC', True),
+  'allPerfect': ('All Perfect', 'DESC', True),
 }
 difficultyColors = {
   'Easy': '#3376f7',
