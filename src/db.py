@@ -120,6 +120,13 @@ class Database:
         songs = self.get_fast_slow(userId, q)
         lst = await songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
+      elif key == 'fullCombo' or key == 'allPerfect':
+        if key == 'allPerfect':
+          songs = self.get_all_perfect_songs(userId, q)
+        else:
+          songs = self.get_full_combo_songs(userId, q)
+        lst = await songs.to_list(length=None)
+        res.extend([len(lst) > 0])
       else:
         songs = self.db[userId]['songs'].find(q).sort(key, DESCENDING if value[1] == 'DESC' else ASCENDING).limit(1)
         lst = await songs.to_list(length=None)
@@ -150,15 +157,39 @@ class Database:
   async def list_songs(self, userId: str, difficulty: str, tag: str):
     q = {}
     if difficulty and difficulty in difficulties:
-      q['difficulty'] = difficulties.index(difficulty)
+      q['difficulty'] = d = difficulties.index(difficulty)
+    else:
+      d = 3
     if tag and tag in tags:
       q['tag'] = tags.index(tag)
     song_counts = self.db[userId]['songs'].aggregate([
       {"$match": q},
+      { '$unwind': '$notes'},
+      {'$project': {
+        'songName': 1,
+        'difficulty': 1,
+        'tag': 1,
+        'rank': 1,
+        'score': 1,
+        'highScore': 1,
+        'maxCombo': 1,
+        'notes': 1,
+        'TP': 1,
+        'fullCombo': {
+          '$cond': [
+            {'$eq': ['$difficulty', d]},
+            {'$eq': [{'$sum': ['$notes.Perfect', '$notes.Great']}, '$maxCombo']},
+            False
+          ],
+        },
+        'allPerfect': {'$eq': ['$notes.Perfect', '$maxCombo']},
+      }},
       {
         "$group": {
           "_id": "$songName",
-          "count": {"$sum": 1}
+          "count": {"$sum": 1},
+          "fullCombo": {'$max': '$fullCombo'},
+          "allPerfect": {'$max': '$allPerfect'},
         }
       },
     ])
@@ -212,6 +243,61 @@ class Database:
       }},
       {'$sort': {'fastSlow': ASCENDING}},
       {'$limit': 1}
+    ])
+
+  def get_full_combo_songs(self, userId: str, q: dict):
+    q1 = q.copy()
+    return self.db[userId]['songs'].aggregate([
+      {'$match': q1},
+      { '$unwind': '$notes'},
+      {'$project': {
+        'songName': 1,
+        'difficulty': 1,
+        'tag': 1,
+        'rank': 1,
+        'score': 1,
+        'highScore': 1,
+        'maxCombo': 1,
+        'notes': 1,
+        'TP': 1,
+        'fullCombo': {'$sum': ['$notes.Perfect', '$notes.Great']}
+      }},
+      {'$group': {
+        '_id': '$_id',
+        'songName': {'$first': '$songName'},
+        'difficulty': {'$first': '$difficulty'},
+        'tag': {'$first': '$tag'},
+        'rank': {'$first': '$rank'},
+        'score': {'$first': '$score'},
+        'highScore': {'$first': '$highScore'},
+        'maxCombo': {'$first': '$maxCombo'},
+        'notes': {'$first': '$notes'},
+        'TP': {'$first': '$TP'},
+        'fullCombo': {'$first': '$fullCombo'},
+      }},
+      {'$match': {'$expr': {'$eq': ['$fullCombo', '$maxCombo']}}},
+      {'$sort': {'fullCombo': DESCENDING}}
+    ])
+
+  def get_all_perfect_songs(self, userId: str, q: dict):
+    q1 = q.copy()
+    return self.db[userId]['songs'].aggregate([
+      {'$match': q1},
+      { '$unwind': '$notes'},
+      {'$group': {
+        '_id': '$_id',
+        'songName': {'$first': '$songName'},
+        'difficulty': {'$first': '$difficulty'},
+        'tag': {'$first': '$tag'},
+        'rank': {'$first': '$rank'},
+        'score': {'$first': '$score'},
+        'highScore': {'$first': '$highScore'},
+        'maxCombo': {'$first': '$maxCombo'},
+        'notes': {'$first': '$notes'},
+        'TP': {'$first': '$TP'},
+      }},
+      {'$match': {'$expr': {'$eq': ['$notes.Perfect', '$maxCombo']}}},
+      {'$sort': {'score': DESCENDING}}
     ])
 
   async def log(self, userId: str, message: str, songId: str = ""):

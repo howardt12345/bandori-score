@@ -87,9 +87,9 @@ async def getBest(ctx: commands.Context, songName: str = None, difficulty: str =
 
 # Lists all the songs of the user
 @bot.command(aliases=commandAliases['listSongs'])
-async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False):
+async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False, allPerfect=False):
   msgLog(ctx)
-  await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, asFile))
+  await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, asFile, allPerfect))
 
 # Generates a graph of the user's scores of a song
 @bot.command(aliases=commandAliases['getSongStats'])
@@ -102,6 +102,12 @@ async def getSongStats(ctx: commands.Context, songName: str = "", difficulty: st
 async def getRecent(ctx: commands.Context, limit: int = 1, tag: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getRecent(db, ctx, limit, tag))
+
+# Compares the user's score to the user's best score of the song
+@bot.command(aliases=commandAliases['compare'])
+async def compare(ctx: commands.Context, id: str):
+  msgLog(ctx)
+  await dbCommand(ctx, bot_commands.compare(db, ctx, id))
 
 # Gets a song's information from the Bestdori API
 @bot.command(aliases=commandAliases['bestdoriGet'])

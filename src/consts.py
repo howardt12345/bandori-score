@@ -16,6 +16,7 @@ noteWeights = {
   'Bad': 0.25,
   'Miss': 0
 }
+# [key]: (display_name, sort_order, hidden (not shown when getBest))
 bestDict = {
   'score': ('Score', 'DESC', False),
   'rank': ('Rank', 'ASC', True),
@@ -23,6 +24,8 @@ bestDict = {
   'notes.Perfect': ('Number of Perfects', 'DESC', False),
   'TP': ('Technical Points', 'DESC', False),
   'fastSlow': ('Fast/Slow', 'ASC', False),
+  'fullCombo': ('Full Combo', 'DESC', True),
+  'allPerfect': ('All Perfect', 'DESC', True),
 }
 difficultyColors = {
   'Easy': '#3376f7',
