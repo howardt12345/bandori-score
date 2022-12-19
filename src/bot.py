@@ -61,13 +61,13 @@ async def getScores(ctx: commands.Context, *, query: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getScores(db, ctx, query))
 
-# Gets the user's scores from the database given an id
+# Edit a score in the database given an id
 @bot.command(aliases=commandAliases['editScore'])
 async def editScore(ctx: commands.Context, id: str):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.editScore(bot, db, ctx, id))
 
-# Gets the user's scores from the database given an id
+# Deletes a score in the database given an id
 @bot.command(aliases=commandAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
@@ -108,6 +108,12 @@ async def getRecent(ctx: commands.Context, limit: int = 1, tag: str = ""):
 async def compare(ctx: commands.Context, id: str):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.compare(db, ctx, id))
+
+# Edits the score's tag in the database given an id
+@bot.command(aliases=commandAliases['tagScore'])
+async def tagScore(ctx: commands.Context, id: str, tag: str = ""):
+  msgLog(ctx)
+  await dbCommand(ctx, bot_commands.tagScore(bot, db, ctx, id, tag))
 
 # Gets a song's information from the Bestdori API
 @bot.command(aliases=commandAliases['bestdoriGet'])

@@ -12,6 +12,7 @@ commandAliases = {
   'getSongStats': ['stats', 'songStats', 's'],
   'getRecent': ['recent', 'recentScores', 'r'],
   'compare': ['c'],
+  'tagScore': ['tag', 't'],
   'bestdoriGet': ['bestdori', 'bd', 'bdGet'],
   'aboutTP': ['TP']
 }
@@ -173,6 +174,19 @@ commandParams = {
       'help': 'The ID of the score to compare to. If left blank, this will compare the last score added to the database.'
     },
   },
+  'tagScore': {
+    'id': {
+      'type': str,
+      'required': True,
+      'help': 'The ID of the score to tag.'
+    },
+    'tag': {
+      'type': str,
+      'allowed': tags,
+      'required': False,
+      'help': 'The tag to apply to the score. If left blank, this will prompt you for a tag.'
+    }
+  },
   'bestdoriGet': {
     'query': {
       'type': str,
@@ -230,6 +244,10 @@ commandHelp = {
   'compare': {
     'description': 'Compares a score to the best existing one.',
     'help': 'Compares a score to the best existing one. The ID of the score can be found by using the getScores command.'
+  },
+  'tagScore': {
+    'description': 'Tags a score.',
+    'help': 'Tags a score given the ID of a score. The ID can be found by using the getScores command.'
   },
   'bestdoriGet': {
     'description': 'Gets Bestdori data on a song.',
