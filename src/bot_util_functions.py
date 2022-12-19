@@ -86,7 +86,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
-        await ctx.send('Using default tag')
+        await ctx.send('Using current tag')
 
   return newSong, wantTag
 
@@ -186,7 +186,7 @@ async def printSongCompare(ctx: commands.Context, bestScores: dict):
       if better:
         msg += f'✅ {name}! ({f"✅had {name.lower()} before" if fbestScore else f"❌no existing {name.lower()}"})\n'
       else:
-        msg += f'❌ Not {name.lower()} ({f"had {name.lower()} before" if fbestScore else f"❌no existing {name.lower()}"})\n'
+        msg += f'❌ Not {name.lower()} ({f"✅had {name.lower()} before" if fbestScore else f"❌no existing {name.lower()}"})\n'
       continue
 
     score, bestScore, better = bestScores[id]
