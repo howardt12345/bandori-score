@@ -14,7 +14,7 @@ import numpy as np
 
 from api import ScoreAPI
 from chart import songCountGraph
-from functions import songInfoToStr, getAboutTP
+from functions import hasTag, songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -355,6 +355,26 @@ async def compare(db: Database, ctx: commands.Context, id: str):
 
   res = await compareSongWithBest(ctx, db, SongInfo.fromDict(score), score['tag'])
   await printSongCompare(ctx, res)
+
+
+async def tagScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str, tag: str = ""):
+  '''Tags a score with a given tag'''
+  user = ctx.message.author
+
+  # Fetch song info of id
+  score = await db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
+
+  song = SongInfo.fromDict(score)
+  await ctx.send(f'{songInfoToStr(song)}')
+  if not tag or not hasTag(tag):
+    tag = await promptTag(bot, ctx)
+
+  await db.update_song(str(user.id), id, song, tag)
+  await ctx.send(f'Changed the tag of the score with id `{id}` to `{tag}`')
+
 
 async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
   '''Gets the bestdori song info for a given query'''
