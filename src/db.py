@@ -10,7 +10,7 @@ import logging
 
 from song_info import SongInfo
 from bestdori import BestdoriAPI
-from functions import songInfoToStr
+from functions import getDifficulty, hasDifficulty, getTag, hasTag, songInfoToStr
 from consts import *
 
 class Database:
@@ -42,7 +42,7 @@ class Database:
     ], unique=True, name="Ensure unique")
 
     songDict = song.toDict()
-    songDict['tag'] = tags.index(tag)
+    songDict['tag'] = getTag(tag)
 
     try:
       new_song = await self.db[userId]['songs'].insert_one(songDict)
@@ -79,10 +79,10 @@ class Database:
     q = {
       'songName': re.compile('^' + re.escape(songName) + '$' if matchExact else re.escape(songName), re.IGNORECASE)
     }
-    if difficulty and difficulty in difficulties:
-      q['difficulty'] = difficulties.index(difficulty)
-    if tag and tag in tags:
-      q['tag'] = tags.index(tag)
+    if difficulty and hasDifficulty(difficulty):
+      q['difficulty'] = getDifficulty(difficulty)
+    if tag and hasTag(tag):
+      q['tag'] = getTag(tag)
     scores = self.db[userId]['songs'].find(q).sort('score', ASCENDING) 
     await self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
     return await scores.to_list(length=None)
@@ -92,10 +92,10 @@ class Database:
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
-    if difficulty and difficulty in difficulties:
-      q['difficulty'] = difficulties.index(difficulty)
-    if tag and tag in tags:
-      q['tag'] = tags.index(tag)
+    if difficulty and hasDifficulty(difficulty):
+      q['difficulty'] = getDifficulty(difficulty)
+    if tag and hasTag(tag):
+      q['tag'] = getTag(tag)
 
     if query == 'fastSlow':
       songs = self.get_fast_slow(userId, q)
@@ -109,10 +109,10 @@ class Database:
     q = {}
     if songName:
       q['songName'] = re.compile('^' + re.escape(songName) + '$', re.IGNORECASE)
-    if difficulty and difficulty in difficulties:
-      q['difficulty'] = difficulties.index(difficulty)
-    if tag and tag in tags:
-      q['tag'] = tags.index(tag)
+    if difficulty and hasDifficulty(difficulty):
+      q['difficulty'] = getDifficulty(difficulty)
+    if tag and hasTag(tag):
+      q['tag'] = getTag(tag)
 
     res = []
     for _, (key, value) in enumerate(bestDict.items()):
@@ -137,8 +137,8 @@ class Database:
 
   async def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):
     songDict = song.toDict()
-    if tag and tag in tags:
-      songDict['tag'] = tags.index(tag)
+    if tag and hasTag(tag):
+      songDict['tag'] = getTag(tag)
     self.db[userId]['songs'].update_one(
       {"_id": ObjectId(songId)},
       {"$set": songDict}
@@ -156,12 +156,12 @@ class Database:
 
   async def list_songs(self, userId: str, difficulty: str, tag: str):
     q = {}
-    if difficulty and difficulty in difficulties:
-      q['difficulty'] = d = difficulties.index(difficulty)
+    if difficulty and hasDifficulty(difficulty):
+      q['difficulty'] = d = getDifficulty(difficulty)
     else:
       d = 3
-    if tag and tag in tags:
-      q['tag'] = tags.index(tag)
+    if tag and hasTag(tag):
+      q['tag'] = getTag(tag)
     song_counts = self.db[userId]['songs'].aggregate([
       {"$match": q},
       { '$unwind': '$notes'},
@@ -199,8 +199,8 @@ class Database:
   
   async def get_recent_songs(self, userId: str, limit: int, tag: str = ""):
     q = {}
-    if tag and tag in tags:
-      q['tag'] = tags.index(tag)
+    if tag and hasTag(tag):
+      q['tag'] = getTag(tag)
     recent_songs = self.db[userId]['songs'].find(q).sort('_id', DESCENDING).limit(limit)
     await self.log(userId, f"GET: User {userId} got recent songs")
     return await recent_songs.to_list(length=None)
