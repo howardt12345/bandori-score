@@ -10,17 +10,29 @@ from song_info import SongInfo
 
 ASSETS_DIR = f'{sys.path[0]} + /../assets'
 
-def getDifficulty(d):
-  return next(i for i,v in enumerate(difficulties) if v.lower() == d)
+def getDifficulty(d: str):
+  try:
+    return next(i for i,v in enumerate(difficulties) if v.lower() == d.lower())
+  except:
+    return None
 
-def hasDifficulty(d):
-  return d.lower() in (x.lower() for x in difficulties)
+def hasDifficulty(d: str):
+  try:
+    return d.lower() in (x.lower() for x in difficulties)
+  except:
+    return False
 
-def getTag(t):
-  return next(i for i,v in enumerate(tags) if v.lower() == t)
+def getTag(t: str):
+  try:
+    return next(i for i,v in enumerate(tags) if v.lower() == t.lower())
+  except:
+    return None
 
-def hasTag(t):
-  return t.lower() in (x.lower() for x in tags)
+def hasTag(t: str):
+  try:
+    return t.lower() in (x.lower() for x in tags)
+  except:
+    return False
 
 def fetchRanks(path):
   '''Fetches the templates of the different ranks'''
