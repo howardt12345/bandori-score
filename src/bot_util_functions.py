@@ -184,9 +184,9 @@ async def printSongCompare(ctx: commands.Context, bestScores: dict):
       score, bestScore, better = bestScores[id]
       fscore, fbestScore = format(id, score), format(id, bestScore)
       if better:
-        msg += f'✅ {name}! ({f"✅has {name.lower()}" if fbestScore else f"❌no {name.lower()} yet"})\n'
+        msg += f'✅ {name}! ({f"✅had {name.lower()} before" if fbestScore else f"❌didn\'t {name.lower()} before"})\n'
       else:
-        msg += f'❌ Not {name.lower()} ({f"✅has {name.lower()}" if fbestScore else f"❌no {name.lower()} yet"})\n'
+        msg += f'❌ Not {name.lower()} ({f"had {name.lower()} before" if fbestScore else f"❌didn\'t {name.lower()} before"})\n'
       continue
 
     score, bestScore, better = bestScores[id]
