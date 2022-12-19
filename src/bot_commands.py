@@ -161,7 +161,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
 
 
   song = SongInfo.fromDict(score)
-  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True)
+  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True, currentTag=tags[score['tag']])
   if wantTag:
     tag = await promptTag(bot, ctx)
   else:
