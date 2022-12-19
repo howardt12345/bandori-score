@@ -103,6 +103,12 @@ async def getRecent(ctx: commands.Context, limit: int = 1, tag: str = ""):
   msgLog(ctx)
   await dbCommand(ctx, bot_commands.getRecent(db, ctx, limit, tag))
 
+# Compares the user's score to the user's best score of the song
+@bot.command(aliases=commandAliases['compare'])
+async def compare(ctx: commands.Context, id: str):
+  msgLog(ctx)
+  await dbCommand(ctx, bot_commands.compare(db, ctx, id))
+
 # Gets a song's information from the Bestdori API
 @bot.command(aliases=commandAliases['bestdoriGet'])
 async def bestdoriGet(ctx: commands.Context, *, query: str = ""):

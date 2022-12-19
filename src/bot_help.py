@@ -3,14 +3,15 @@ from functools import reduce
 
 commandAliases = {
   'newScores': ['new', 'ns', 'add'],
-  'getScores': ['get', 'getScore', 'getSong', 'getSongs'],
-  'editScore': ['edit', 'editSong'],
-  'deleteScore': ['delete', 'deleteSong'],
-  'manualInput': ['input'],
-  'getBest': ['highest', 'best'],
+  'getScores': ['get', 'getScore', 'getSong', 'getSongs', 'g'],
+  'editScore': ['edit', 'editSong', 'e'],
+  'deleteScore': ['delete', 'deleteSong', 'd'],
+  'manualInput': ['input', 'mi'],
+  'getBest': ['highest', 'best', 'b'],
   'listSongs': ['list', 'songs', 'ls', 'listScores'],
-  'getSongStats': ['stats', 'songStats'],
-  'getRecent': ['recent', 'recentScores'],
+  'getSongStats': ['stats', 'songStats', 's'],
+  'getRecent': ['recent', 'recentScores', 'r'],
+  'compare': ['c'],
   'bestdoriGet': ['bestdori', 'bd', 'bdGet'],
   'aboutTP': ['TP']
 }
@@ -159,6 +160,13 @@ commandParams = {
       'help': 'The tag to get the recent scores for. Lists all tags if not provided.'
     },
   },
+  'compare': {
+    'query': {
+      'id': str,
+      'required': False,
+      'help': 'The ID of the score to compare to. If left blank, this will compare the last score added to the database.'
+    },
+  },
   'bestdoriGet': {
     'query': {
       'type': str,
@@ -212,6 +220,10 @@ commandHelp = {
   'getRecent': {
     'description': 'Gets your recent scores.',
     'help': 'Gets the most recent scores you added to the database'
+  },
+  'compare': {
+    'description': 'Compares a score to the best existing one.',
+    'help': 'Compares a score to the best existing one. The ID of the score can be found by using the getScores command.'
   },
   'bestdoriGet': {
     'description': 'Gets Bestdori data on a song.',

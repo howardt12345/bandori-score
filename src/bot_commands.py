@@ -106,7 +106,7 @@ async def newScores(
 
     if not output is None:
       if compare:
-        compareRes = await compareSongWithBest(ctx, db, output.toDict(), tag)
+        compareRes = await compareSongWithBest(ctx, db, output, tag)
       res = await db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
@@ -335,6 +335,18 @@ async def getRecent(db: Database, ctx: commands.Context, limit: int, tag: str = 
   for song in songs:
     await ctx.send(db.songInfoMsg(song))
 
+async def compare(db: Database, ctx: commands.Context, id: str):
+  '''Compares the user's scores to the user's best score of the song'''
+  user = ctx.message.author
+
+  # Fetch song info of id
+  score = await db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
+
+  res = await compareSongWithBest(ctx, db, SongInfo.fromDict(score), score['tag'])
+  await printSongCompare(ctx, res)
 
 async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
   '''Gets the bestdori song info for a given query'''
