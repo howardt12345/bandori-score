@@ -391,7 +391,7 @@ async def tagScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: s
     return
 
   song = SongInfo.fromDict(score)
-  await ctx.send(f'{songInfoToStr(song)}')
+  await ctx.send(f'```{songInfoToStr(song)}```tag: `{tags[score["tag"]]}`')
   if not tag or not hasTag(tag):
     tag = await promptTag(bot, ctx)
 
