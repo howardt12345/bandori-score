@@ -14,7 +14,7 @@ import numpy as np
 
 from api import ScoreAPI
 from chart import songCountGraph
-from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP
+from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP, validateSong
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -52,7 +52,8 @@ async def newScores(
     # Get the song info
     output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
-    key, song, _ = db.bestdori.getSong(output.songName)
+    key, _, info = db.bestdori.getSong(output.songName)
+    songValid, validationErrors = validateSong(output, info)
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
@@ -62,7 +63,8 @@ async def newScores(
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
     msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
-    msgText += 'React with ✅ to save the song to the database\n'
+    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    msgText += '\n---\nReact with ✅ to save the song to the database\n'
     msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'

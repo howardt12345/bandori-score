@@ -6,7 +6,7 @@ import logging
 
 from consts import *
 from db import Database
-from functions import songInfoToStr, songTemplateFormat, strToSongInfo
+from functions import songInfoToStr, songTemplateFormat, strToSongInfo, validateSong
 from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
@@ -38,11 +38,15 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       if error:
         await ctx.send(error)
 
-    key, song, _ = db.bestdori.getSong(ns.songName)
+    key, _, info = db.bestdori.getSong(ns.songName)
+    songValid, validationErrors = validateSong(ns, info)
 
     # Give user a double check prompt before deciding whether to save
     msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
     msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    msgText += "\n---\n"
+
     reply_msg = await ctx.send(msgText)
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
