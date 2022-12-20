@@ -15,7 +15,7 @@ import numpy as np
 from api import ScoreAPI
 from chart import songCountGraph
 from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP, validateSong
-from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
+from bot_util_functions import confirmSongInfo, getBandEmoji, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
 from consts import tags, bestDict, TIMEOUT
@@ -318,6 +318,8 @@ async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: s
     d = db.bestdori.getDifficulty(song, getDifficulty(difficulty) if hasDifficulty(difficulty) else 3)
     msgText += f'`{d}`'
     msgText += f'{"✅" if count["fullCombo"] else "❌"} '
+    if not asFile:
+      msgText += getBandEmoji(song['bandId'])
     if allPerfect: msgText += f'{"☑️" if count["allPerfect"] else "❌"}'
     msgText += f'{name if name else dbName}{f" (`{dbName}`)" if name != dbName else ""}: {count["count"]}'
     msgText += "\n"

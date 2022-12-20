@@ -34,3 +34,13 @@ difficultyColors = {
   'Expert': '#ff2d31',
   'Special': '#f0209e',
 }
+bandEmojis = {
+  1: '<:PopipaLogo:1054792560360566884>',
+  2: '<:AfterglowLogo:1054792554769551511>',
+  3: '<:HHWLogo:1054792556665393263>',
+  4: '<:PasupareLogo:1054792558930313347>',
+  5: '<:RoseliaLogo:1054792563112022186>',
+  6: '<:GlitterGreenLogo:1054792555969122374>',
+  18: '<:RASLogo:1054792561585307700>',
+  21: '<:MorfonicaLogo:1054792557823008879>',
+}
