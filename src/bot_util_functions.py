@@ -217,4 +217,4 @@ def getBandEmoji(id: int):
   try:
     return bandEmojis[id]
   except:
-    return '◼️'
+    return '◼️' 
