@@ -211,3 +211,10 @@ async def printSongCompare(ctx: commands.Context, bestScores: dict):
     else:
       msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
   await ctx.send(msg)
+
+def getBandEmoji(id: int):
+  '''Get the emoji for the band'''
+  try:
+    return bandEmojis[id]
+  except:
+    return '◼️'
