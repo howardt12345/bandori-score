@@ -142,7 +142,7 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
       scores = await db.get_song(str(user.id), query.strip())
     except Exception as e:
       logging.info(e)
-      scores = await db.get_scores_of_song(str(user.id), query.strip())
+      scores = await db.get_scores_of_song(str(user.id), db.bestdori.closestSongName(query.strip()))
 
   if not scores or len(scores) == 0:
     await ctx.send(f'No scores found for "{query}"')
