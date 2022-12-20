@@ -37,14 +37,16 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       ns, error = strToSongInfo(msg.content)
       if error:
         await ctx.send(error)
-
-    key, song, info = db.bestdori.getSong(ns.songName)
-    songValid, validationErrors = validateSong(ns, info)
-
+      
+      # Check if the score is valid, if not, ask user to edit again
+      key, song, info = db.bestdori.getSong(ns.songName)
+      songValid, validationErrors = validateSong(ns, info)
     # Give user a double check prompt before deciding whether to save
     msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
     msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
-    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    msgText += "✅ Valid song score" if songValid else f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    if ns.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
     msgText += "\n---\n"
 
     reply_msg = await ctx.send(msgText)

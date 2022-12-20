@@ -63,7 +63,9 @@ async def newScores(
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
     msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
-    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    msgText += "✅ Valid song score" if songValid else f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    if output.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
     msgText += '\n---\nReact with ✅ to save the song to the database\n'
     msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
     msgText += 'React with 📝 to edit the song info\n'
