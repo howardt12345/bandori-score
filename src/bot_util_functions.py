@@ -12,7 +12,7 @@ from song_info import SongInfo
 def msgLog(ctx: commands.Context):
   logging.info(f'--- {ctx.message.author} ({ctx.message.guild} in #{ctx.message.channel}) {ctx.message.content}')
 
-async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
+async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
@@ -38,8 +38,12 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       if error:
         await ctx.send(error)
 
+    key, song, _ = db.bestdori.getSong(ns.songName)
+
     # Give user a double check prompt before deciding whether to save
-    reply_msg = await ctx.send(f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```')
+    msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    reply_msg = await ctx.send(msgText)
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
 
@@ -58,7 +62,7 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
-        await ctx.send('Ignoring this song')
+        await ctx.send('Cancelled saving this song')
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:

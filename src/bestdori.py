@@ -82,6 +82,5 @@ class BestdoriAPI:
       _, s, _ = self.getSong(song)
       return s['difficulty'][str(difficulty)]['playLevel']
 
-  def getDifficultyFromSongName(self, songName, difficulty: int):
-    song = self.getSong(songName)
-    return self.getDifficulty(song, difficulty)
+  def getUrl(self, key):
+    return f'https://bestdori.com/info/songs/{key}'

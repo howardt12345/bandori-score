@@ -52,6 +52,7 @@ async def newScores(
     # Get the song info
     output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
+    key, song, _ = db.bestdori.getSong(output.songName)
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
@@ -60,6 +61,7 @@ async def newScores(
 
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
     msgText += 'React with ✅ to save the song to the database\n'
     msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
     msgText += 'React with 📝 to edit the song info\n'
@@ -93,7 +95,7 @@ async def newScores(
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
         logging.info('newScores: User deemed song info inaccurate and is editing song info')
-        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True, currentTag=tag)
+        output, wantTag = await confirmSongInfo(bot, db, ctx, output, askTag=True, currentTag=tag)
         if wantTag:
           tag = await promptTag(bot, ctx)
         pass
@@ -161,7 +163,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
 
 
   song = SongInfo.fromDict(score)
-  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True, currentTag=tags[score['tag']])
+  newSong, wantTag = await confirmSongInfo(bot, db, ctx, song, askTag=True, currentTag=tags[score['tag']])
   if wantTag:
     tag = await promptTag(bot, ctx)
   else:
@@ -236,7 +238,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       # request song info
       tag = defaultTag if defaultTag in tags else tags[0]
 
-      song, wantTag = await confirmSongInfo(bot, ctx, askTag=True)
+      song, wantTag = await confirmSongInfo(bot, db, ctx, askTag=True)
       if song:
         if wantTag:
           tag = await promptTag(bot, ctx)
