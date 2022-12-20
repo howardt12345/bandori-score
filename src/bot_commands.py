@@ -14,7 +14,7 @@ import numpy as np
 
 from api import ScoreAPI
 from chart import songCountGraph
-from functions import hasTag, songInfoToStr, getAboutTP
+from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -290,13 +290,17 @@ async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: s
   totalFC = sum([x['fullCombo'] for x in counts])
   if allPerfect: totalAP = sum([x['allPerfect'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
+  # counts.sort(key=lambda x: db.bestdori.getDifficulty(x['_id'], getDifficulty(difficulty) if hasDifficulty(difficulty) else 3))
   msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({len(counts)} songs, {totalCount} scores):\n"
   for count in counts:
     dbName = count['_id']
-    name = db.bestdori.closestSongName(dbName)
-    msgText += f'{"✅" if count["fullCombo"] else "❌"}'
+    _, song, _ = db.bestdori.getSong(dbName, songInfo=False)
+    name = db.bestdori.getSongName(song)
+    d = db.bestdori.getDifficulty(song, getDifficulty(difficulty) if hasDifficulty(difficulty) else 3)
+    msgText += f'`{d}`'
+    msgText += f'{"✅" if count["fullCombo"] else "❌"} '
     if allPerfect: msgText += f'{"☑️" if count["allPerfect"] else "❌"}'
-    msgText += f'{name if name else dbName}{f" (`{dbName}` in database)" if name != dbName else ""}: {count["count"]}'
+    msgText += f'{name if name else dbName}{f" (`{dbName}`)" if name != dbName else ""}: {count["count"]}'
     msgText += "\n"
 
   msgText += f'\nSongs that have a full combo entry in {difficulty if difficulty else "Expert"}: {totalFC}'

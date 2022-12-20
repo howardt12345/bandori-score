@@ -35,7 +35,7 @@ class BestdoriAPI:
     self.bands = getBands()
   
   def closestSongName(self, songName):
-    matches = get_close_matches(songName, self.getSongNames(), n=1, cutoff=0.5)
+    matches = get_close_matches(songName, self.getSongNames(), n=1, cutoff=0.4)
     return matches[0] if len(matches) > 0 else None
   
   def getBandName(self, bandId: int):
@@ -70,8 +70,17 @@ class BestdoriAPI:
     _, song, _ = self.getSong(songName)
     return self.getBandName(song['bandId'])
 
-  def getDifficulty(self, song, difficulty: int):
-    return song['difficulty'][str(difficulty)]['playLevel']
+  def getSongName(self, song):
+    title = song['musicTitle'][self.server]
+    fallbackTitle = next(song for song in song['musicTitle'] if song is not None)
+    return title if title is not None else fallbackTitle
+
+  def getDifficulty(self, song: dict | str, difficulty: int):
+    if type(song) is dict:
+      return song['difficulty'][str(difficulty)]['playLevel']
+    elif type(song) is str:
+      _, s, _ = self.getSong(song)
+      return s['difficulty'][str(difficulty)]['playLevel']
 
   def getDifficultyFromSongName(self, songName, difficulty: int):
     song = self.getSong(songName)
