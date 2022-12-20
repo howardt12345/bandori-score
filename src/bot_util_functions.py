@@ -42,7 +42,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       key, song, info = db.bestdori.getSong(ns.songName)
       songValid, validationErrors = validateSong(ns, info)
       if not songValid:
-        await ctx.send(f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.")
+        await ctx.send(f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.")
         ns = None
 
     # Give user a double check prompt before deciding whether to save

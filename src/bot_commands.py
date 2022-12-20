@@ -60,25 +60,37 @@ async def newScores(
     logging.info('newScores: Initial song read: ')
     logging.info(output)
 
+    # Display the song information
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
+    # Display the detected song URL and whether it's valid
     msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
-    msgText += "✅ Valid song score" if songValid else f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+
+    # Display a warning if the song's name will be stored differently on save
     if output.songName != db.bestdori.getSongName(song):
       msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
-    msgText += '\n---\nReact with ✅ to save the song to the database\n'
-    msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+
+    msgText += '\n---\n'
+    # Display the possible message actions
+    if songValid:
+      msgText += 'React with ✅ to save the song to the database\n'
+      msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    else:
+      msgText += '⚠️ Cannot add the score because it is invalid. Please edit the song info and fix the errors.\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'
+    # Send the message
     message = await ctx.send(msgText, file=discord.File(BytesIO(cv2.imencode('.jpg', res)[1]), filename=file.filename, spoiler=file.is_spoiler()))
 
-    await message.add_reaction('✅')
-    await message.add_reaction('☑️')
+    if songValid: # Only allow the user to save the song if the song is initially valid
+      await message.add_reaction('✅')
+      await message.add_reaction('☑️')
     await message.add_reaction('📝')
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '☑️', '📝', '❌']
+      return user == ctx.author and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else songValid, '📝', '❌']
 
     # Wait for user to react
     try:
