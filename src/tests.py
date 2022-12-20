@@ -56,9 +56,8 @@ def testBestdori():
   res = bd.getSong('blessing chord')
   print(res)
 
-
 # testDir('live')
 # testImage(f'{sys.path[0]} + /../testdata/IMG_0996.png')
 # testImage(f'{sys.path[0]} + /../testdata/BanG_Dream_2022-11-23-22-56-00.jpg')
 # asyncio.run(testDatabase())
-testBestdori()
+# testBestdori()
