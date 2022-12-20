@@ -38,7 +38,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       if error:
         await ctx.send(error)
 
-    key, _, info = db.bestdori.getSong(ns.songName)
+    key, song, info = db.bestdori.getSong(ns.songName)
     songValid, validationErrors = validateSong(ns, info)
 
     # Give user a double check prompt before deciding whether to save
@@ -62,6 +62,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
     else:
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
+        ns.songName = db.bestdori.getSongName(song)
         newSong = ns
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':

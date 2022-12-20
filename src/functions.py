@@ -220,7 +220,7 @@ def validateSong(songInfo: SongInfo, songData: dict):
   # If the score is less than the score required for the detected rank, then the song is invalid
   rank = songInfo.score >= songData['difficulty'][str(getDifficulty(songInfo.difficulty))][f'score{songInfo.rank}']
   # If the score is greater than 10 million, assume it's impossible
-  impossibleScore = songInfo.score >= 10000000
+  impossibleScore = songInfo.score < 10000000
 
   return fastSlow and noteScores and totalNotes and rank and impossibleScore, {
     'fastSlow': fastSlow,

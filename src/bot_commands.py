@@ -52,7 +52,7 @@ async def newScores(
     # Get the song info
     output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
-    key, _, info = db.bestdori.getSong(output.songName)
+    key, song, info = db.bestdori.getSong(output.songName)
     songValid, validationErrors = validateSong(output, info)
 
     # Display the song info to the user and wait for a response
@@ -109,6 +109,7 @@ async def newScores(
         pass
 
     if not output is None:
+      output.songName = db.bestdori.getSongName(song)
       if compare:
         compareRes = await compareSongWithBest(ctx, db, output, tag)
       res = await db.create_song(str(user.id), output, tag)

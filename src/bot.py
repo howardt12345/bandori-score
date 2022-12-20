@@ -71,7 +71,7 @@ async def editScore(ctx: commands.Context, id: str):
 @bot.command(aliases=commandAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
-  await dbCommand(ctx, bot_commands.deleteScore(db, ctx, id))
+  await dbCommand(ctx, bot_commands.deleteScore(bot, db, ctx, id))
 
 # Lets the user manually input a score
 @bot.command(aliases=commandAliases['manualInput'])
