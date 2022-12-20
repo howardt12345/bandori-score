@@ -71,13 +71,13 @@ async def editScore(ctx: commands.Context, id: str):
 @bot.command(aliases=commandAliases['deleteScore'])
 async def deleteScore(ctx: commands.Context, id: str):
   msgLog(ctx)
-  await dbCommand(ctx, bot_commands.deleteScore(db, ctx, id))
+  await dbCommand(ctx, bot_commands.deleteScore(bot, db, ctx, id))
 
 # Lets the user manually input a score
 @bot.command(aliases=commandAliases['manualInput'])
 async def manualInput(ctx: commands.Context, defaultTag: str = ""):
   msgLog(ctx)
-  await dbCommand(ctx, bot_commands.manualInput(db, ctx, defaultTag))
+  await dbCommand(ctx, bot_commands.manualInput(bot, db, ctx, defaultTag))
 
 # Gets the user's best scores of categories defined in bestDict
 @bot.command(aliases=commandAliases['getBest'])

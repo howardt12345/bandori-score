@@ -206,3 +206,26 @@ def getAboutTP():
   for note in noteWeights:
     msg += f"\n  - {note}: {int(noteWeights[note]*100)}%"
   return msg
+
+def validateSong(songInfo: SongInfo, songData: dict):
+  '''Validates a song against the song data'''
+  songDataNotes = songData['notes'][str(getDifficulty(songInfo.difficulty))]
+  # If there are no fast/slow notes, then the fast/slow counts must be 0. 
+  # If there are fast/slow notes, then the sum of fast/slow must equal the total number of great, good, and bad notes
+  fastSlow = not songInfo.hasFastSlow() or ((songInfo.fast + songInfo.slow) == (songInfo.notes['Great'] + songInfo.notes['Good'] + songInfo.notes['Bad']))
+  # If any of the note counts are negative, then the song is invalid
+  noteScores = all(songInfo.notes[note] >= 0 for note in types)
+  # If the sum of the note counts is not equal to the total number of notes for the song, then the song is invalid
+  totalNotes = songInfo.totalNotes() == songDataNotes
+  # If the score is less than the score required for the detected rank, then the song is invalid
+  rank = songInfo.score >= songData['difficulty'][str(getDifficulty(songInfo.difficulty))][f'score{songInfo.rank}']
+  # If the score is greater than 10 million, assume it's impossible
+  impossibleScore = songInfo.score < 10000000
+
+  return fastSlow and noteScores and totalNotes and rank and impossibleScore, {
+    'fastSlow': fastSlow,
+    'noteScores': noteScores,
+    'totalNotes': totalNotes,
+    'rank': rank,
+    'impossibleScore': impossibleScore
+  }

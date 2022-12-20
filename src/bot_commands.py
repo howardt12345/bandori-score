@@ -14,7 +14,7 @@ import numpy as np
 
 from api import ScoreAPI
 from chart import songCountGraph
-from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP
+from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP, validateSong
 from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
@@ -52,27 +52,45 @@ async def newScores(
     # Get the song info
     output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
+    key, song, info = db.bestdori.getSong(output.songName)
+    songValid, validationErrors = validateSong(output, info)
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
     logging.info('newScores: Initial song read: ')
     logging.info(output)
 
+    # Display the song information
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
-    msgText += 'React with ✅ to save the song to the database\n'
-    msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    # Display the detected song URL and whether it's valid
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+
+    # Display a warning if the song's name will be stored differently on save
+    if output.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
+
+    msgText += '\n---\n'
+    # Display the possible message actions
+    if songValid:
+      msgText += 'React with ✅ to save the song to the database\n'
+      msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    else:
+      msgText += '⚠️ Cannot add the score because it is invalid. Please edit the song info and fix the errors.\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'
+    # Send the message
     message = await ctx.send(msgText, file=discord.File(BytesIO(cv2.imencode('.jpg', res)[1]), filename=file.filename, spoiler=file.is_spoiler()))
 
-    await message.add_reaction('✅')
-    await message.add_reaction('☑️')
+    if songValid: # Only allow the user to save the song if the song is initially valid
+      await message.add_reaction('✅')
+      await message.add_reaction('☑️')
     await message.add_reaction('📝')
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '☑️', '📝', '❌']
+      return user == ctx.author and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else songValid, '📝', '❌']
 
     # Wait for user to react
     try:
@@ -93,7 +111,7 @@ async def newScores(
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
         logging.info('newScores: User deemed song info inaccurate and is editing song info')
-        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True, currentTag=tag)
+        output, wantTag = await confirmSongInfo(bot, db, ctx, output, askTag=True, currentTag=tag)
         if wantTag:
           tag = await promptTag(bot, ctx)
         pass
@@ -105,6 +123,7 @@ async def newScores(
         pass
 
     if not output is None:
+      output.songName = db.bestdori.getSongName(song)
       if compare:
         compareRes = await compareSongWithBest(ctx, db, output, tag)
       res = await db.create_song(str(user.id), output, tag)
@@ -137,7 +156,7 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
       scores = await db.get_song(str(user.id), query.strip())
     except Exception as e:
       logging.info(e)
-      scores = await db.get_scores_of_song(str(user.id), query.strip())
+      scores = await db.get_scores_of_song(str(user.id), db.bestdori.closestSongName(query.strip()))
 
   if not scores or len(scores) == 0:
     await ctx.send(f'No scores found for "{query}"')
@@ -161,7 +180,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
 
 
   song = SongInfo.fromDict(score)
-  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True, currentTag=tags[score['tag']])
+  newSong, wantTag = await confirmSongInfo(bot, db, ctx, song, askTag=True, currentTag=tags[score['tag']])
   if wantTag:
     tag = await promptTag(bot, ctx)
   else:
@@ -236,7 +255,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       # request song info
       tag = defaultTag if defaultTag in tags else tags[0]
 
-      song, wantTag = await confirmSongInfo(bot, ctx, askTag=True)
+      song, wantTag = await confirmSongInfo(bot, db, ctx, askTag=True)
       if song:
         if wantTag:
           tag = await promptTag(bot, ctx)

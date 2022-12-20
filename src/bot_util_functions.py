@@ -6,13 +6,13 @@ import logging
 
 from consts import *
 from db import Database
-from functions import songInfoToStr, songTemplateFormat, strToSongInfo
+from functions import songInfoToStr, songTemplateFormat, strToSongInfo, validateSong
 from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
   logging.info(f'--- {ctx.message.author} ({ctx.message.guild} in #{ctx.message.channel}) {ctx.message.content}')
 
-async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
+async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
@@ -37,9 +37,23 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
       ns, error = strToSongInfo(msg.content)
       if error:
         await ctx.send(error)
+      
+      # Check if the score is valid, if not, ask user to edit again
+      key, song, info = db.bestdori.getSong(ns.songName)
+      songValid, validationErrors = validateSong(ns, info)
+      if not songValid:
+        await ctx.send(f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.")
+        ns = None
 
     # Give user a double check prompt before deciding whether to save
-    reply_msg = await ctx.send(f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```')
+    msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    msgText += "✅ Valid song score" if songValid else f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    if ns.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
+    msgText += "\n---\n"
+
+    reply_msg = await ctx.send(msgText)
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
 
@@ -54,11 +68,12 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
     else:
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
+        ns.songName = db.bestdori.getSongName(song)
         newSong = ns
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
-        await ctx.send('Ignoring this song')
+        await ctx.send('Cancelled saving this song')
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:

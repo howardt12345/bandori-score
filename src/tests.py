@@ -1,6 +1,7 @@
 # shut opencv errors up
 import os
 from dotenv import load_dotenv
+from bestdori import BestdoriAPI
 
 from db import Database
 os.environ["OPENCV_LOG_LEVEL"]="SILENT"
@@ -50,8 +51,13 @@ async def testDatabase():
   res = db.get_full_combo_songs(userId, {'songName': 'A DECLARATION OF x x x'})
   print(await res.to_list(length=None))
 
+def testBestdori():
+  bd = BestdoriAPI()
+  res = bd.getSong('blessing chord')
+  print(res)
 
 # testDir('live')
 # testImage(f'{sys.path[0]} + /../testdata/IMG_0996.png')
 # testImage(f'{sys.path[0]} + /../testdata/BanG_Dream_2022-11-23-22-56-00.jpg')
-asyncio.run(testDatabase())
+# asyncio.run(testDatabase())
+# testBestdori()
