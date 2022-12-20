@@ -145,13 +145,13 @@ class Database:
     )
 
     updated_song = await self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
-    await self.log(userId, f"PUT: User {userId} updated song with ID {songId}: \n{updated_song}")
+    await self.log(userId, f"PUT: User {userId} updated song with ID {songId}", songId)
     return updated_song
 
 
   async def delete_song(self, userId: str, songId: str):
     await self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
-    await self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}")
+    await self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}", songId)
 
 
   async def list_songs(self, userId: str, difficulty: str, tag: str):
