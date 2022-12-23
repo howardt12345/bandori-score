@@ -218,3 +218,10 @@ def getBandEmoji(id: int):
     return bandEmojis[id]
   except:
     return '◼️'
+
+def idFromBandEmoji(emoji: str):
+  '''Get the band id from the emoji'''
+  try:
+    return [k for k, v in bandEmojis.items() if v == emoji][0]
+  except:
+    return -1

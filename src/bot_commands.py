@@ -15,7 +15,7 @@ import numpy as np
 from api import ScoreAPI
 from chart import songCountGraph
 from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP, validateSong
-from bot_util_functions import confirmSongInfo, getBandEmoji, promptTag, compareSongWithBest, printSongCompare
+from bot_util_functions import confirmSongInfo, getBandEmoji, idFromBandEmoji, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
 from consts import tags, bestDict, TIMEOUT
@@ -300,17 +300,24 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
         await ctx.send(f"No best {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}")
 
 
-async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False, allPerfect=False):
+async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", band: str = "", asFile=False, allPerfect=False):
   '''Gets the number of songs in the database'''
   user = ctx.message.author
   counts = await db.list_songs(str(user.id), difficulty, tag)
-  counts.sort(key=lambda x: x['_id'].lower())
+  # Filter by band if provided
+  if band:
+    bandId = idFromBandEmoji(band)
+    if bandId == -1:
+      await ctx.send(f'Invalid band emoji: {band}')
+      return
+    counts = [x for x in counts if db.bestdori.getSong(x['_id'], songInfo=False)[1]['bandId'] == bandId]
+  # counts.sort(key=lambda x: x['_id'].lower())
   totalCount = sum([x['count'] for x in counts])
   totalFC = sum([x['fullCombo'] for x in counts])
   if allPerfect: totalAP = sum([x['allPerfect'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
   # counts.sort(key=lambda x: db.bestdori.getDifficulty(x['_id'], getDifficulty(difficulty) if hasDifficulty(difficulty) else 3))
-  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({len(counts)} songs, {totalCount} scores):\n"
+  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''}{f' for {band}' if band else ''} ({len(counts)} songs, {totalCount} scores):\n"
   for count in counts:
     dbName = count['_id']
     _, song, _ = db.bestdori.getSong(dbName, songInfo=False)

@@ -87,9 +87,9 @@ async def getBest(ctx: commands.Context, songName: str = None, difficulty: str =
 
 # Lists all the songs of the user
 @bot.command(aliases=commandAliases['listSongs'])
-async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", asFile=False, allPerfect=False):
+async def listSongs(ctx: commands.Context, difficulty: str = None, tag: str = "", band: str = "", asFile=False, allPerfect=False):
   msgLog(ctx)
-  await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, asFile, allPerfect))
+  await dbCommand(ctx, bot_commands.listSongs(db, ctx, difficulty, tag, band, asFile, allPerfect))
 
 # Generates a graph of the user's scores of a song
 @bot.command(aliases=commandAliases['getSongStats'])
