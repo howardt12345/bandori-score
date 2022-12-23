@@ -167,6 +167,7 @@ class Database:
       { '$unwind': '$notes'},
       {'$project': {
         'songName': 1,
+        'lowerSongName': {'$toLower': '$songName'},
         'difficulty': 1,
         'tag': 1,
         'rank': 1,
@@ -190,8 +191,10 @@ class Database:
           "count": {"$sum": 1},
           "fullCombo": {'$max': '$fullCombo'},
           "allPerfect": {'$max': '$allPerfect'},
+          "lowerSongName": {'$first': '$lowerSongName'},
         }
       },
+      {'$sort': {'lowerSongName': ASCENDING}},
     ])
     await self.log(userId, f"GET: User {userId} got song counts")
     return await song_counts.to_list(length=None)
