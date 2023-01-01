@@ -21,6 +21,8 @@ class Database:
     logging.info("Connected to the MongoDB database!")
     self.bestdori = BestdoriAPI()
 
+  def initBestdori(self):
+    self.bestdori = BestdoriAPI()
 
   async def create_song(self, userId: str, song: SongInfo, tag: str):
     await self.db[userId]['songs'].create_index([
