@@ -119,6 +119,7 @@ async def tagScore(ctx: commands.Context, id: str, tag: str = ""):
 # Gets a song's information from the Bestdori API
 @bot.command(aliases=commandAliases['bestdoriGet'])
 async def bestdoriGet(ctx: commands.Context, *, query: str = ""):
+  db.initBestdori()
   msgLog(ctx)
   await bot_commands.bestdoriGet(db, ctx, query)
 
