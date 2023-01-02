@@ -2,16 +2,17 @@ import numpy as np
 import cv2
 from discord.ext import commands
 import asyncio
+import logging
+
 from consts import *
 from db import Database
-
-from functions import songInfoToStr, songTemplateFormat, strToSongInfo
+from functions import songInfoToStr, songTemplateFormat, strToSongInfo, validateSong
 from song_info import SongInfo
 
 def msgLog(ctx: commands.Context):
-  print(f'--- {ctx.message.author} ({ctx.message.guild}) {ctx.message.content}')
+  logging.info(f'--- {ctx.message.author} ({ctx.message.guild} in #{ctx.message.channel}) {ctx.message.content}')
 
-async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: SongInfo = None, askTag=False):
+async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
@@ -32,34 +33,71 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
     ns = None
     while ns is None:
       # Get the message from the user and store it in song info
-      msg = await bot.wait_for('message', check=check, timeout=180.0)
+      msg = await bot.wait_for('message', check=check, timeout=TIMEOUT)
       ns, error = strToSongInfo(msg.content)
       if error:
         await ctx.send(error)
+      
+      # Check if the score is valid, if not, ask user to edit again
+      key, song, info = db.bestdori.getSong(ns.songName)
+      songValid, validationErrors = validateSong(ns, info)
+      if not songValid:
+        msgText = f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.\n"
+        msgText += "React with ⚠️ to save the song anyway\n"
+        msgText += "React with ❌ to cancel this operation\n"
+        reply_msg = await ctx.send(msgText)
+        await reply_msg.add_reaction('⚠️')
+        await reply_msg.add_reaction('❌')
+
+        def check(reaction, user):
+          return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['⚠️', '❌']
+
+        # Wait for user to react
+        try:
+          reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
+        except asyncio.TimeoutError:
+          await ctx.send('Timed out')
+        else:
+          # If user confirms, save new song and return
+          if str(reaction.emoji) == '⚠️':
+            break
+          # If user cancels, return nothing
+          elif str(reaction.emoji) == '❌':
+            # Ignore
+            await ctx.send('Cancelled operation')
+            return
+          else:
+            ns = None
 
     # Give user a double check prompt before deciding whether to save
-    reply_msg = await ctx.send(f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```')
+    msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    msgText += "✅ Valid song score" if songValid else f"⚠️ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+    if ns.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
+    msgText += "\n---\n"
+
+    reply_msg = await ctx.send(msgText)
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       await ctx.send('Timed out')
     else:
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
+        ns.songName = db.bestdori.getSongName(song)
         newSong = ns
-        pass
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
-        await ctx.send('Ignoring this song')
-        pass
+        await ctx.send('Cancelled saving this song')
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:
@@ -68,28 +106,26 @@ async def confirmSongInfo(bot: commands.Bot, ctx: commands.Context, oldSong: Son
   # Ask if user wants to tag the song
   wantTag = False
   if askTag and newSong:
-    reply_msg = await ctx.send(f'Do you want to tag this song?')
+    reply_msg = await ctx.send(f'Do you want to tag this song? The current tag is `{currentTag}`')
     await reply_msg.add_reaction('✅')
     await reply_msg.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       await ctx.send('Timed out')
     else:
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
         wantTag = True
-        pass
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
-        await ctx.send('Using default tag')
-        pass
+        await ctx.send('Using current tag')
 
   return newSong, wantTag
 
@@ -109,9 +145,9 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   # Wait for user to send edited song
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in tagIcons
+    return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in tagIcons
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     tag = tags[tagIcons.index(reaction.emoji)]
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
@@ -120,55 +156,96 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   return tag
 
-def compareSongWithBest(ctx: commands.Context, db: Database, song: dict, tag: str):
+async def compareSongWithBest(ctx: commands.Context, db: Database, song: SongInfo, tag: str):
   '''Compare the song with the best rated songs in the database'''
   res = {}
   user = ctx.message.author
-  bestScores = db.get_best_songs(str(user.id), song['songName'], difficulties[song['difficulty']], tag)
+  bestScores = await db.get_best_songs(str(user.id), song.songName, song.difficulty, tag)
   for x, (id, value) in enumerate(bestDict.items()):
     _, op, _ = value
     if id == "notes.Perfect":
-      score = song['notes']['Perfect']
-      bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 else 0
+      score = song.notes['Perfect']
+      bestScore = bestScores[x]['notes']['Perfect'] if len(bestScores) > 0 and bestScores[x] else 0
       better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
       res[id] = (score, bestScore, better)
-    elif id == "fastSlow":
-      if ('fast' in song and 'slow' in song):
-        if (bestScores[x]):
-          score = (song['fast'], song['slow'])
-          bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 else (-1, -1)
-          better = score >= bestScore if op == 'DESC' else score <= bestScore
-          res[id] = (score, bestScore, better)
-        else:
-          res[id] = ((song['fast'], song['slow']), (-1, -1), True)
-    else:
-      score = song[id]
-      bestScore = bestScores[x][id] if len(bestScores) > 0 else 0 if op == 'DESC' else -1
-      better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+      continue
+
+    if id == "fastSlow":
+      if not song.hasFastSlow():
+        continue
+
+      if (bestScores[x]):
+        score = (song.fast, song.slow)
+        bestScore = (bestScores[x]['fast'], bestScores[x]['slow']) if len(bestScores) > 0 and bestScores[x] else (-1, -1)
+        better = sum(score) >= sum(bestScore) if op == 'DESC' else sum(score) <= sum(bestScore) 
+        res[id] = (score, bestScore, better)
+      else:
+        res[id] = ((song.fast, song.slow), (-1, -1), True)
+      continue
+
+    if id == "fullCombo" or id == "allPerfect":
+      if id == "allPerfect":
+        score = song.isAllPerfect()
+      else:
+        score = song.isFullCombo()
+      bestScore = bestScores[x] if len(bestScores) > 0 and bestScores[x] else False
+      better = score
       res[id] = (score, bestScore, better)
+      continue
+
+    score = song.toDict()[id]
+    bestScore = bestScores[x][id] if len(bestScores) > 0 and bestScores[x] else 0 if op == 'DESC' else -1
+    better = score >= bestScore if op == 'DESC' else score <= bestScore if bestScore >= 0 else True
+    res[id] = (score, bestScore, better)
   return res
 
 async def printSongCompare(ctx: commands.Context, bestScores: dict):
-  '''Print the comparison of the song with the best rated songs in the database'''
+  '''logging.info the comparison of the song with the best rated songs in the database'''
   if bestScores is None:
     await ctx.send('Failed to compare song with other entries')
-  else:
-    def format(category, score):
-      if category == 'TP':
-        return f'{score*100:.4f}%'
-      elif category == 'rank':
-        return f'{ranks[score]}'
-      else:
-        return score
-    msg = 'Score analysis:\n'
-    for _, (id, value) in enumerate(bestDict.items()):
-      name, _, _ = value
-      if id in bestScores:
-        score, bestScore, better = bestScores[id]
-        fscore, fbestScore = format(id, score), format(id, bestScore)
-        if better:
-          msg += f'✅ {name} >= best ({fscore} >= {fbestScore})\n'
-        else:
-          msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
-    await ctx.send(msg)
+    return
+
+  def format(category, score):
+    if category == 'TP':
+      return f'{score*100:.5f}%'
+    elif category == 'rank':
+      return f'{ranks[score]}'
+    else:
+      return score
   
+  msg = 'Score analysis:\n'
+  for _, (id, value) in enumerate(bestDict.items()):
+    name, _, _ = value
+    if not id in bestScores:
+      continue
+
+    if id == "fullCombo" or id == "allPerfect":
+      score, bestScore, better = bestScores[id]
+      fscore, fbestScore = format(id, score), format(id, bestScore)
+      if better:
+        msg += f'✅ {name}! ({f"✅had {name.lower()} before" if fbestScore else f"❌no existing {name.lower()}"})\n'
+      else:
+        msg += f'❌ Not {name.lower()} ({f"✅had {name.lower()} before" if fbestScore else f"❌no existing {name.lower()}"})\n'
+      continue
+
+    score, bestScore, better = bestScores[id]
+    fscore, fbestScore = format(id, score), format(id, bestScore)
+    if better:
+      msg += f'✅ {name} >= best ({fscore} >= {fbestScore})\n'
+    else:
+      msg += f'❌ {name} < best ({fscore} < {fbestScore})\n'
+  await ctx.send(msg)
+
+def getBandEmoji(id: int):
+  '''Get the emoji for the band'''
+  try:
+    return bandEmojis[id]
+  except:
+    return '◼️'
+
+def idFromBandEmoji(emoji: str):
+  '''Get the band id from the emoji'''
+  try:
+    return [k for k, v in bandEmojis.items() if v == emoji][0]
+  except:
+    return -1

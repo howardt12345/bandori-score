@@ -4,6 +4,7 @@ from io import BytesIO, StringIO
 import discord
 from discord.ext import commands
 import asyncio
+import logging
 
 from dotenv import load_dotenv
 import os
@@ -13,18 +14,18 @@ import numpy as np
 
 from api import ScoreAPI
 from chart import songCountGraph
-from functions import songInfoToStr, getAboutTP
-from bot_util_functions import confirmSongInfo, promptTag, compareSongWithBest, printSongCompare
+from functions import getDifficulty, hasDifficulty, hasTag, songInfoToStr, getAboutTP, validateSong
+from bot_util_functions import confirmSongInfo, getBandEmoji, idFromBandEmoji, promptTag, compareSongWithBest, printSongCompare
 from song_info import SongInfo
 from db import Database
-from consts import tags, bestDict
+from consts import tags, bestDict, TIMEOUT
 from bot_help import getCommandHelp
 
 async def newScores(
   scoreAPI: ScoreAPI, 
   bot: commands.Bot, 
-  db: Database, ctx: 
-  commands.Context, 
+  db: Database, 
+  ctx: commands.Context, 
   compare: bool, 
   defaultTag: str = ""
 ):
@@ -36,6 +37,7 @@ async def newScores(
 
   compareRes = None
 
+  logging.info(f'newScores: Processing scores of {len(files)} song(s)')
   await ctx.send(f'Processing scores of {len(files)} song(s)...')
 
   for x, file in enumerate(files):
@@ -50,56 +52,83 @@ async def newScores(
     # Get the song info
     output, res = scoreAPI.getSongInfo(img)
     tag = defaultTag if defaultTag in tags else tags[0]
+    key, song, info = db.bestdori.getSong(output.songName)
+    songValid, validationErrors = validateSong(output, info)
 
     # Display the song info to the user and wait for a response
     fp.seek(0)
+    logging.info('newScores: Initial song read: ')
+    logging.info(output)
 
+    # Display the song information
     msgText = f'Song {x+1}/{len(files)}:\n'
     msgText += f'```{songInfoToStr(output)}```'
-    msgText += 'React with ✅ to save the song to the database\n'
-    msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    # Display the detected song URL and whether it's valid
+    msgText += f'Detected Song:\n{db.bestdori.getUrl(key)}\n'
+    msgText += "✅ Valid song score" if songValid else f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}"
+
+    # Display a warning if the song's name will be stored differently on save
+    if output.songName != db.bestdori.getSongName(song):
+      msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
+
+    msgText += '\n---\n'
+    # Display the possible message actions
+    if songValid:
+      msgText += 'React with ✅ to save the song to the database\n'
+      msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    else:
+      msgText += '⚠️ Cannot add the score because it is invalid. Please edit the song info and fix the errors (or ignore the error by reacting ⚠️ to the message).\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'
+    # Send the message
     message = await ctx.send(msgText, file=discord.File(BytesIO(cv2.imencode('.jpg', res)[1]), filename=file.filename, spoiler=file.is_spoiler()))
 
-    await message.add_reaction('✅')
-    await message.add_reaction('☑️')
+    if songValid: # Only allow the user to save the song if the song is initially valid
+      await message.add_reaction('✅')
+      await message.add_reaction('☑️')
     await message.add_reaction('📝')
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '☑️', '📝', '❌']
+      return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else None, '📝', '❌', '⚠️']
 
     # Wait for user to react
     try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     except asyncio.TimeoutError:
       output = None
       await ctx.send('Timed out')
     else:
       if str(reaction.emoji) == '✅':
         # Add to database
+        logging.info('newScores: Adding score to database')
         pass
-      elif str(reaction.emoji) == '☑️':
+      elif str(reaction.emoji) == '☑️' or str(reaction.emoji) == '⚠️':
+        if str(reaction.emoji) == '⚠️':
+          await ctx.send("Ignoring invalid score validation errors and adding score to database...")
         # Add tag
+        logging.info('newScores: Prompting for tag')
         tag = await promptTag(bot, ctx)
         pass
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
-        output, wantTag = await confirmSongInfo(bot, ctx, output, askTag=True)
+        logging.info('newScores: User deemed song info inaccurate and is editing song info')
+        output, wantTag = await confirmSongInfo(bot, db, ctx, output, askTag=True, currentTag=tag)
         if wantTag:
           tag = await promptTag(bot, ctx)
         pass
       elif str(reaction.emoji) == '❌':
         # Ignore
         output = None
+        logging.info('newScores: Score add operation canceled')
         await ctx.send('Score discarded')
         pass
 
     if not output is None:
+      output.songName = db.bestdori.getSongName(song)
       if compare:
-        compareRes = compareSongWithBest(ctx, db, output.toDict(), tag)
-      res = db.create_song(str(user.id), output, tag)
+        compareRes = await compareSongWithBest(ctx, db, output, tag)
+      res = await db.create_song(str(user.id), output, tag)
       if res and res != -1:
         id = res.get('_id', '')
         msgText = f'({output.difficulty}) {output.songName} with a score of {output.score} added to database with tag `{tag}`'
@@ -111,7 +140,7 @@ async def newScores(
       else:
         await ctx.send('Error adding song to database')
 
-    if compareRes:
+    if not output is None and compareRes:
       await printSongCompare(ctx, compareRes)
 
   await ctx.send(f'Done processing scores of {len(files)} song(s)!')
@@ -126,10 +155,10 @@ async def getScores(db: Database, ctx: commands.Context, query: str = ""):
     return
   else:
     try:
-      scores = db.get_song(str(user.id), query.strip())
+      scores = await db.get_song(str(user.id), query.strip())
     except Exception as e:
-      print(e)
-      scores = db.get_scores_of_song(str(user.id), query.strip())
+      logging.info(e)
+      scores = await db.get_scores_of_song(str(user.id), db.bestdori.closestSongName(query.strip()))
 
   if not scores or len(scores) == 0:
     await ctx.send(f'No scores found for "{query}"')
@@ -146,21 +175,21 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
   user = ctx.message.author
 
   # Fetch song info of id
-  score = db.get_song(str(user.id), id)
+  score = await db.get_song(str(user.id), id)
   if not score:
     await ctx.send(f'No score found with id `{id}`')
     return
 
 
   song = SongInfo.fromDict(score)
-  newSong, wantTag = await confirmSongInfo(bot, ctx, song, askTag=True)
+  newSong, wantTag = await confirmSongInfo(bot, db, ctx, song, askTag=True, currentTag=tags[score['tag']])
   if wantTag:
     tag = await promptTag(bot, ctx)
   else:
     tag = None
   if newSong:
     # Update the song
-    db.update_song(str(user.id), id, newSong, tag)
+    await db.update_song(str(user.id), id, newSong, tag)
     await ctx.send(f'Score with id `{id}` updated')
   else:
     await ctx.send('No changes made')
@@ -170,7 +199,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
   user = ctx.message.author
 
   # Fetch song info of id
-  score = db.get_song(str(user.id), id)
+  score = await db.get_song(str(user.id), id)
   if not score:
     await ctx.send(f'No score found with id `{id}`')
     return
@@ -185,17 +214,17 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
   await message.add_reaction('❌')
 
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+    return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅', '❌']
 
   # Wait for user to react
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
   except asyncio.TimeoutError:
     await ctx.send('Timed out')
   else:
     if str(reaction.emoji) == '✅':
       # Delete
-      db.delete_song(str(user.id), id)
+      await db.delete_song(str(user.id), id)
       await ctx.send(f'Deleted score `{id}`')
     elif str(reaction.emoji) == '❌':
       # Ignore
@@ -216,11 +245,11 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
   await message.add_reaction('❌')
 
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+    return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅', '❌']
 
   # Wait for user to react
   try:
-    reaction, _ = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
   except asyncio.TimeoutError:
     await ctx.send('Timed out')
   else:
@@ -228,11 +257,11 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       # request song info
       tag = defaultTag if defaultTag in tags else tags[0]
 
-      song, wantTag = await confirmSongInfo(bot, ctx, askTag=True)
+      song, wantTag = await confirmSongInfo(bot, db, ctx, askTag=True)
       if song:
         if wantTag:
           tag = await promptTag(bot, ctx)
-        res = db.create_song(str(user.id), song, tag)
+        res = await db.create_song(str(user.id), song, tag)
         if res and res != -1:
           id = res.get('_id', '')
           msgText = f'({song.difficulty}) {song.songName} with a score of {song.score} added to database with tag `{tag}`'
@@ -255,7 +284,7 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
     \nSong name and difficulty must be provided and query must be one of: {bestDict.keys()}''')
     return
   user = ctx.message.author
-  res = db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else db.get_best_songs(str(user.id), songName, difficulty, tag)
+  res = await db.get_song_with_best(str(user.id), songName, difficulty, tag, query, bestDict[query][1]) if query else await db.get_best_songs(str(user.id), songName, difficulty, tag)
   scores = res[0] if res and query else res
   if not scores or len(scores) == 0:
     await ctx.send(f'No best {query} entry for "{songName}" {f"({difficulty})" if difficulty else ""}')
@@ -273,18 +302,39 @@ async def getBest(db: Database, ctx: commands.Context, songName: str, difficulty
         await ctx.send(f"No best {value[0]} entry{f' for {songName}' if songName else ''}{f' in {difficulty}' if difficulty else ''}")
 
 
-async def getSongCounts(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", asFile=False):
+async def listSongs(db: Database, ctx: commands.Context, difficulty: str, tag: str = "", band: str = "", asFile=False, allPerfect=False):
   '''Gets the number of songs in the database'''
   user = ctx.message.author
-  counts = db.get_song_counts(str(user.id), difficulty, tag)
-  counts.sort(key=lambda x: x['_id'].lower())
+  counts = await db.list_songs(str(user.id), difficulty, tag)
+  # Filter by band if provided
+  if band:
+    bandId = idFromBandEmoji(band)
+    if bandId == -1:
+      await ctx.send(f'Invalid band emoji: {band}')
+      return
+    counts = [x for x in counts if db.bestdori.getSong(x['_id'], songInfo=False)[1]['bandId'] == bandId]
+  # counts.sort(key=lambda x: x['_id'].lower())
   totalCount = sum([x['count'] for x in counts])
+  totalFC = sum([x['fullCombo'] for x in counts])
+  if allPerfect: totalAP = sum([x['allPerfect'] for x in counts])
   # counts.sort(key=lambda x: x['count'], reverse=True)
-  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''} ({totalCount} total):\n"
+  # counts.sort(key=lambda x: db.bestdori.getDifficulty(x['_id'], getDifficulty(difficulty) if hasDifficulty(difficulty) else 3))
+  msgText = f"You have the following{f' {difficulty}' if difficulty else ''} song scores stored{f' with a tag of {tag}' if tag else ''}{f' for {band}' if band else ''} ({len(counts)} songs, {totalCount} scores):\n"
   for count in counts:
     dbName = count['_id']
-    name = db.bestdori.closestSongName(dbName)
-    msgText += f'{name if name else dbName} {f"(`{dbName}` in database)" if name != dbName else ""}: {count["count"]}\n'
+    _, song, _ = db.bestdori.getSong(dbName, songInfo=False)
+    name = db.bestdori.getSongName(song)
+    d = db.bestdori.getDifficulty(song, getDifficulty(difficulty) if hasDifficulty(difficulty) else 3)
+    msgText += f'`{d}`'
+    msgText += f'{"✅" if count["fullCombo"] else "❌"} '
+    if not asFile:
+      msgText += getBandEmoji(song['bandId'])
+    if allPerfect: msgText += f'{"☑️" if count["allPerfect"] else "❌"}'
+    msgText += f'{name if name else dbName}{f" (`{dbName}`)" if name != dbName else ""}: {count["count"]}'
+    msgText += "\n"
+
+  msgText += f'\nSongs that have a full combo entry in {difficulty if difficulty else "Expert"}: {totalFC}'
+  if allPerfect: msgText += f'\nSongs that have an all perfect entry: {totalAP}'
 
   if asFile:
     buf = StringIO(msgText)
@@ -306,7 +356,7 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str = "", 
   '''Gets the stats of a song given a song name and difficulty'''
   user = ctx.message.author
   await ctx.send(f"Getting stats for{f' ({difficulty}) ' if difficulty else ' '}{songName}{f' with tag {tag}' if tag else ''}...")
-  stats = db.get_scores_of_song(str(user.id), songName, difficulty, tag, matchExact)
+  stats = await db.get_scores_of_song(str(user.id), songName, difficulty, tag, matchExact)
   if len(stats) == 0:
     await ctx.send(f'Can\'t get stats for "{songName}" ({difficulty})')
     return
@@ -319,13 +369,45 @@ async def getSongStats(db: Database, ctx: commands.Context, songName: str = "", 
 async def getRecent(db: Database, ctx: commands.Context, limit: int, tag: str = ""):
   '''Gets the most recent songs added to the database'''
   user = ctx.message.author
-  songs = db.get_recent_songs(str(user.id), limit, tag)
+  songs = await db.get_recent_songs(str(user.id), limit, tag)
   if len(songs) == 0:
     await ctx.send(f'No recent songs found')
     return
   await ctx.send(f"Your {limit} most recent song(s){f' with tag {tag}' if tag else ''}:")
   for song in songs:
     await ctx.send(db.songInfoMsg(song))
+
+async def compare(db: Database, ctx: commands.Context, id: str):
+  '''Compares the user's scores to the user's best score of the song'''
+  user = ctx.message.author
+
+  # Fetch song info of id
+  score = await db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
+
+  res = await compareSongWithBest(ctx, db, SongInfo.fromDict(score), score['tag'])
+  await printSongCompare(ctx, res)
+
+
+async def tagScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: str, tag: str = ""):
+  '''Tags a score with a given tag'''
+  user = ctx.message.author
+
+  # Fetch song info of id
+  score = await db.get_song(str(user.id), id)
+  if not score:
+    await ctx.send(f'No score found with id `{id}`')
+    return
+
+  song = SongInfo.fromDict(score)
+  await ctx.send(f'```{songInfoToStr(song)}```tag: `{tags[score["tag"]]}`')
+  if not tag or not hasTag(tag):
+    tag = await promptTag(bot, ctx)
+
+  await db.update_song(str(user.id), id, song, tag)
+  await ctx.send(f'Changed the tag of the score with id `{id}` to `{tag}`')
 
 
 async def bestdoriGet(db: Database,ctx: commands.Context, query: str):
