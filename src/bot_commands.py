@@ -77,7 +77,7 @@ async def newScores(
       msgText += 'React with ✅ to save the song to the database\n'
       msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
     else:
-      msgText += '⚠️ Cannot add the score because it is invalid. Please edit the song info and fix the errors.\n'
+      msgText += '⚠️ Cannot add the score because it is invalid. Please edit the song info and fix the errors (or ignore the error by reacting ⚠️ to the message).\n'
     msgText += 'React with 📝 to edit the song info\n'
     msgText += 'React with ❌ to discard the song\n'
     # Send the message
@@ -90,7 +90,7 @@ async def newScores(
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else songValid, '📝', '❌']
+      return user == ctx.author and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else None, '📝', '❌', '⚠️']
 
     # Wait for user to react
     try:
@@ -103,7 +103,9 @@ async def newScores(
         # Add to database
         logging.info('newScores: Adding score to database')
         pass
-      elif str(reaction.emoji) == '☑️':
+      elif str(reaction.emoji) == '☑️' or str(reaction.emoji) == '⚠️':
+        if str(reaction.emoji) == '⚠️':
+          await ctx.send("Ignoring invalid score validation errors and adding score to database...")
         # Add tag
         logging.info('newScores: Prompting for tag')
         tag = await promptTag(bot, ctx)
