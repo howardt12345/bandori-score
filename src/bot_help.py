@@ -24,7 +24,7 @@ def getCommandHelp(command, prefix):
           if 'default' in cmdParams[cmd]:
             msg += f'\n - Default: {cmdParams[cmd]["default"]}'
           if 'allowed' in cmdParams[cmd]:
-            msg += f'\n - Allowed: `{"`, `".join(cmdParams[cmd]["allowed"])}`'
+            msg += f'\n - Allowed: {", ".join(cmdParams[cmd]["allowed"])}'
       else :
         msg += "\n\nThis command has no arguments."
       return msg + ''

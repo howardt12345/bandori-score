@@ -99,6 +99,12 @@ commandParams = {
       'required': False,
       'help': 'The tag to list the songs for. Lists all tags if not provided.'
     },
+    'band': {
+      'type': str,
+      'allowed': bandEmojis.values(),
+      'required': False,
+      'help': 'The band to list the songs for. Lists all bands if not provided.'
+    },
     'asFile': {
       'type': bool,
       'default': False,
