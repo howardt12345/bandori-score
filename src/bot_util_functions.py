@@ -50,7 +50,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
         await reply_msg.add_reaction('❌')
 
         def check(reaction, user):
-          return user == ctx.author and str(reaction.emoji) in ['⚠️', '❌']
+          return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['⚠️', '❌']
 
         # Wait for user to react
         try:
@@ -82,7 +82,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
     await reply_msg.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
 
     # Wait for user to react
     try:
@@ -111,7 +111,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
     await reply_msg.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
 
     # Wait for user to react
     try:
@@ -145,7 +145,7 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
 
   # Wait for user to send edited song
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in tagIcons
+    return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in tagIcons
   try:
     reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
     tag = tags[tagIcons.index(reaction.emoji)]

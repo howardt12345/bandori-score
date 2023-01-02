@@ -90,7 +90,7 @@ async def newScores(
     await message.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else None, '📝', '❌', '⚠️']
+      return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅' if songValid else None, '☑️' if songValid else None, '📝', '❌', '⚠️']
 
     # Wait for user to react
     try:
@@ -214,7 +214,7 @@ async def deleteScore(bot: commands.Bot, db: Database, ctx: commands.Context, id
   await message.add_reaction('❌')
 
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+    return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅', '❌']
 
   # Wait for user to react
   try:
@@ -245,7 +245,7 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
   await message.add_reaction('❌')
 
   def check(reaction, user):
-    return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+    return user == ctx.author and reaction.message.id == message.id and str(reaction.emoji) in ['✅', '❌']
 
   # Wait for user to react
   try:
