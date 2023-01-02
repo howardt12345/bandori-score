@@ -14,7 +14,7 @@ from song_info import SongInfo
 
 fprop = fm.FontProperties(fname='NotoSansJP-Regular.otf')
 
-def plotDot(axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bool = False):
+def plotDot(axes: Axes, x, y, v, h, song: SongInfo, bd: BestdoriAPI, showSongNames: bool = False):
   '''Plots a dot on the graph, adds a song label if specified'''
   axes.plot(x, y, 'o', color=difficultyColors[song.difficulty])
   axes.annotate(
@@ -49,7 +49,7 @@ def format_number(data_value, _):
   return formatter
 
 
-def scoreGraph(axes: Axes, scores, songs, bd: BestdoriAPI, showSongNames: bool = False):
+def scoreGraph(axes: Axes, scores, songs: list[SongInfo], bd: BestdoriAPI, showSongNames: bool = False):
   '''Plots a graph of the scores'''
   axes.plot(scores, color='silver')
   for i, v in enumerate(scores):
@@ -62,7 +62,7 @@ def scoreGraph(axes: Axes, scores, songs, bd: BestdoriAPI, showSongNames: bool =
   axes.grid(True)
 
 
-def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
+def notesGraph(axes: Axes, songs: list[SongInfo], showMaxCombo: bool = False):
   '''Plots the perfect, great, good, bad, miss, and max combo counts on a graph. The graph shows more difference between notes on the top and bottom of the graph'''
   perfects = [song.notes['Perfect'] for song in songs]
   greats = [song.notes['Great'] for song in songs]
@@ -118,7 +118,7 @@ def notesGraph(axes: Axes, songs, showMaxCombo: bool = False):
   axes.set_yticks(ticks, minorTicks)
   axes.grid(True)
 
-def TPgraph(axes: Axes, songs, bd: BestdoriAPI, showSongNames: bool = False):
+def TPgraph(axes: Axes, songs: list[SongInfo], bd: BestdoriAPI, showSongNames: bool = False):
   '''Plots the TP score calculated from each song'''
   TP = [song.calculateTP() for song in songs]
   min_tp = min(filter(lambda tp: tp > 0.01, TP))
