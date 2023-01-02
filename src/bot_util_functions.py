@@ -42,8 +42,32 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       key, song, info = db.bestdori.getSong(ns.songName)
       songValid, validationErrors = validateSong(ns, info)
       if not songValid:
-        await ctx.send(f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.")
-        ns = None
+        msgText = f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.\n"
+        msgText += "React with ⚠️ to save the song anyway\n"
+        msgText += "React with ❌ to cancel this operation\n"
+        reply_msg = await ctx.send(msgText)
+        await reply_msg.add_reaction('⚠️')
+        await reply_msg.add_reaction('❌')
+
+        def check(reaction, user):
+          return user == ctx.author and str(reaction.emoji) in ['⚠️', '❌']
+
+        # Wait for user to react
+        try:
+          reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
+        except asyncio.TimeoutError:
+          await ctx.send('Timed out')
+        else:
+          # If user confirms, save new song and return
+          if str(reaction.emoji) == '⚠️':
+            break
+          # If user cancels, return nothing
+          elif str(reaction.emoji) == '❌':
+            # Ignore
+            await ctx.send('Cancelled operation')
+            return
+          else:
+            ns = None
 
     # Give user a double check prompt before deciding whether to save
     msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
