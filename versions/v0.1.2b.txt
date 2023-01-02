@@ -1,4 +1,13 @@
-v0.1.2b Private beta
+`v0.1.2b` Private beta is now merged into `main`
 
 Changelog:
-- Fixed an issue where compare would fail when adding a song for the first time
+  Features: 
+    - Adds score validation using data from Bestdori to ensure that the score is valid
+    - Adds a new `tagScore` command to edit the tag of a score
+    - Adds a new `compare` command to compare your score to the best score on the server
+    - Adds filtering by band emojis in the `listScores` command
+    - Checks for full combo and all perfect in the score compare
+  Fixes: 
+    - Fixed an issue where compare would fail when adding a song for the first time
+    - Improves OCR accuracy
+    - Various minor bugfixes
