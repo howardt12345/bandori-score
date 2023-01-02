@@ -42,19 +42,21 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
       key, song, info = db.bestdori.getSong(ns.songName)
       songValid, validationErrors = validateSong(ns, info)
       if not songValid:
-        msgText = f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}. Please try again.\n"
-        msgText += "React with ⚠️ to save the song anyway\n"
+        msgText = f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}.\n"
+        msgText += "React with 🔁 to try again\n"
+        msgText += "React with ⚠️ to ignore the errors and save the song anyway\n"
         msgText += "React with ❌ to cancel this operation\n"
         reply_msg = await ctx.send(msgText)
+        await reply_msg.add_reaction('🔁')
         await reply_msg.add_reaction('⚠️')
         await reply_msg.add_reaction('❌')
 
-        def check(reaction, user):
-          return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['⚠️', '❌']
+        def check1(reaction, user):
+          return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['🔁', '⚠️', '❌']
 
         # Wait for user to react
         try:
-          reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
+          reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check1)
         except asyncio.TimeoutError:
           await ctx.send('Timed out')
         else:
@@ -65,9 +67,12 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
           elif str(reaction.emoji) == '❌':
             # Ignore
             await ctx.send('Cancelled operation')
-            return
+            return None, None
           else:
+            # Ignore
+            await ctx.send('Please try again')
             ns = None
+            continue
 
     # Give user a double check prompt before deciding whether to save
     msgText = f'Double check if this is what you want the song information to be:\n```{songInfoToStr(ns)}```'
