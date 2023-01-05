@@ -1,7 +1,8 @@
 # Bot with chat commands
 
+import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions
 
 from dotenv import load_dotenv
@@ -38,12 +39,11 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='$', intents=intents, help_command=None)
 
 # Create API
-scoreAPI = ScoreAPI(draw=True)
-db = Database()
+scoreAPI: ScoreAPI = None
+db: Database = None
 
 async def dbCommand(ctx: commands.Context, cmd: any):
   status = await db.ping_server()
-  db.initBestdori()
   if not status:
     await ctx.send("Unable to access the database")
     return
@@ -157,4 +157,15 @@ async def ping(ctx: commands.Context):
   dbStatus = await db.ping_server()
   await ctx.send(f"Database: {'Connected' if dbStatus else 'Disconnected'}")
 
-bot.run(TOKEN)
+async def main():
+  logging.info("Starting bot")
+  global scoreAPI
+  scoreAPI = ScoreAPI(draw=True)
+  global db
+  db = Database()
+  # For some reason the bot logs twice after loading extensions
+  await bot.load_extension("cogs.daily_reset")
+  await bot.start(TOKEN)
+
+if __name__ == '__main__':
+  asyncio.run(main())
