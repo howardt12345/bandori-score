@@ -44,7 +44,6 @@ db: Database = None
 
 async def dbCommand(ctx: commands.Context, cmd: any):
   status = await db.ping_server()
-  db.initBestdori()
   if not status:
     await ctx.send("Unable to access the database")
     return
