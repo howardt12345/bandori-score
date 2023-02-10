@@ -12,7 +12,7 @@ from song_info import SongInfo
 def msgLog(ctx: commands.Context):
   logging.info(f'--- {ctx.message.author} ({ctx.message.guild} in #{ctx.message.channel}) {ctx.message.content}')
 
-async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context, oldSong: SongInfo = None, askTag=False, currentTag: str = ""):
+async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context, oldSong: SongInfo = None, currentTag: str = ""):
   '''Confirm the song info and allow the user to edit the info if incorrect'''
   # Send template for user to edit
   if oldSong:
@@ -25,6 +25,7 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
 
   # New song to return
   newSong = None
+  tag = currentTag if currentTag in tags else tags[0]
 
   # Wait for user to send edited song
   def check(m):
@@ -81,13 +82,18 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
     if ns.songName != db.bestdori.getSongName(song):
       msgText += f'\n‼️ Song name will be stored as `{db.bestdori.getSongName(song)}` on save'
     msgText += "\n---\n"
+    # Display the possible message actions
+    msgText += 'React with ✅ to save the song to the database\n'
+    msgText += f'React with ☑️ to add a tag to the song before saving (`{tag}` by default)\n'
+    msgText += 'React with ❌ to discard the song\n'
 
     reply_msg = await ctx.send(msgText)
     await reply_msg.add_reaction('✅')
+    await reply_msg.add_reaction('☑️')
     await reply_msg.add_reaction('❌')
 
     def check(reaction, user):
-      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
+      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '☑️', '❌']
 
     # Wait for user to react
     try:
@@ -97,42 +103,27 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
     else:
       # If user confirms, save new song and return
       if str(reaction.emoji) == '✅':
-        ns.songName = db.bestdori.getSongName(song)
-        newSong = ns
+        # Add to database
+        logging.info('confirmSongInfo: Confirming current song info')
+        pass
+      elif str(reaction.emoji) == '☑️':
+        logging.info('confirmSongInfo: Prompting for tag')
+        tag = await promptTag(bot, ctx)
+        pass
       # If user cancels, return nothing
       elif str(reaction.emoji) == '❌':
         # Ignore
         await ctx.send('Cancelled saving this song')
+        return None, tag
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:
-    await ctx.send('Thanks for the confirmation!')
+    await ctx.send('Thanks for confirming the song!')
 
-  # Ask if user wants to tag the song
-  wantTag = False
-  if askTag and newSong:
-    reply_msg = await ctx.send(f'Do you want to tag this song? The current tag is `{currentTag}`')
-    await reply_msg.add_reaction('✅')
-    await reply_msg.add_reaction('❌')
+  ns.songName = db.bestdori.getSongName(song)
+  newSong = ns
 
-    def check(reaction, user):
-      return user == ctx.author and reaction.message.id == reply_msg.id and str(reaction.emoji) in ['✅', '❌']
-
-    # Wait for user to react
-    try:
-      reaction, _ = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
-    except asyncio.TimeoutError:
-      await ctx.send('Timed out')
-    else:
-      # If user confirms, save new song and return
-      if str(reaction.emoji) == '✅':
-        wantTag = True
-      # If user cancels, return nothing
-      elif str(reaction.emoji) == '❌':
-        # Ignore
-        await ctx.send('Using current tag')
-
-  return newSong, wantTag
+  return newSong, tag
 
 async def promptTag(bot: commands.Bot, ctx: commands.Context):
   '''Prompt the user to tag the song'''
@@ -157,7 +148,7 @@ async def promptTag(bot: commands.Bot, ctx: commands.Context):
   except asyncio.TimeoutError:
     await ctx.send('Timed out.')
   else:
-    await ctx.send('Thanks for the confirmation!')
+    await ctx.send('Thanks for confirming the tag!')
 
   return tag
 
