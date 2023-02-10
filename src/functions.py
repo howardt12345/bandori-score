@@ -209,6 +209,9 @@ def getAboutTP():
 
 def validateSong(songInfo: SongInfo, songData: dict):
   '''Validates a song against the song data'''
+  # If the song info or song data is invalid, then the song is invalid
+  if not songInfo or not songData:
+    return False, { 'invalidInput': False }
   songDataNotes = songData['notes'][str(getDifficulty(songInfo.difficulty))]
   # If there are no fast/slow notes, then the fast/slow counts must be 0. 
   # If there are fast/slow notes, then the sum of fast/slow must equal the total number of great, good, and bad notes

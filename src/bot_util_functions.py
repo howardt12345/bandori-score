@@ -39,7 +39,10 @@ async def confirmSongInfo(bot: commands.Bot, db: Database, ctx: commands.Context
         await ctx.send(error)
       
       # Check if the score is valid, if not, ask user to edit again
-      key, song, info = db.bestdori.getSong(ns.songName)
+      try:
+        key, song, info = db.bestdori.getSong(ns.songName)
+      except:
+        info = None
       songValid, validationErrors = validateSong(ns, info)
       if not songValid:
         msgText = f"❌ Invalid song score: {', '.join(key for key, value in validationErrors.items() if not value)}.\n"
