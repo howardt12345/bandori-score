@@ -113,9 +113,7 @@ async def newScores(
       elif str(reaction.emoji) == '📝':
         # Have user confirm song info
         logging.info('newScores: User deemed song info inaccurate and is editing song info')
-        output, wantTag = await confirmSongInfo(bot, db, ctx, output, askTag=True, currentTag=tag)
-        if wantTag:
-          tag = await promptTag(bot, ctx)
+        output, tag = await confirmSongInfo(bot, db, ctx, output, currentTag=tag)
         pass
       elif str(reaction.emoji) == '❌':
         # Ignore
@@ -182,11 +180,7 @@ async def editScore(bot: commands.Bot, db: Database, ctx: commands.Context, id: 
 
 
   song = SongInfo.fromDict(score)
-  newSong, wantTag = await confirmSongInfo(bot, db, ctx, song, askTag=True, currentTag=tags[score['tag']])
-  if wantTag:
-    tag = await promptTag(bot, ctx)
-  else:
-    tag = None
+  newSong, tag = await confirmSongInfo(bot, db, ctx, song, currentTag=tags[score['tag']])
   if newSong:
     # Update the song
     await db.update_song(str(user.id), id, newSong, tag)
@@ -257,10 +251,8 @@ async def manualInput(bot: commands.Bot, db: Database, ctx: commands.Context, de
       # request song info
       tag = defaultTag if defaultTag in tags else tags[0]
 
-      song, wantTag = await confirmSongInfo(bot, db, ctx, askTag=True)
+      song, tag = await confirmSongInfo(bot, db, ctx)
       if song:
-        if wantTag:
-          tag = await promptTag(bot, ctx)
         res = await db.create_song(str(user.id), song, tag)
         if res and res != -1:
           id = res.get('_id', '')
