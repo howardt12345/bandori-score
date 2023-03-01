@@ -54,7 +54,10 @@ class ScoreAPI:
     noteScores = {}
 
     for template in self.templates['noteTypes']:
-      tmp, type, ratio, tolerance = template
+      tmp, noteType = template
+      type = noteType['type']
+      ratio = noteType['ratio']
+      tolerance = noteType['tolerance']
 
       # Get the location of the note type row
       result = cv2.matchTemplate(image, tmp, cv2.TM_CCOEFF_NORMED)

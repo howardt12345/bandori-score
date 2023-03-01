@@ -51,12 +51,12 @@ def fetchNoteTypes(path):
   \nReturns the name of the note type as well as variables for OCR ROI positioning'''
   # List of note types and variables for OCR matching
   imgs = []
-  for x, type in enumerate(types):
+  for noteType in noteTypes.values():
     ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'{ASSETS_DIR}/{path}/score/{type}.{ext}')
+    template = cv2.imread(f'{ASSETS_DIR}/{path}/score/{noteType["type"]}.{ext}')
     if not template is None:
       # If the template exists, add it to the list
-      imgs.append(( template, type, ratios[x], tolerances[x] ))
+      imgs.append(( template, noteType ))
   return imgs
 
 def fetchDifficulties(path):

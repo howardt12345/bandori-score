@@ -5,6 +5,34 @@ types = ['Perfect', 'Great', 'Good', 'Bad', 'Miss']
 ratios = [2.115, 2.78, 2.85, 4.37, 3.9]
 # The top and bottom tolerances of the note type bounding box
 tolerances = [(2, 0), (0, 0), (-1, 0), (2, 3), (-1, 5)]
+
+noteTypes = {
+  'Perfect': {
+    'type': 'Perfect',
+    'ratio': 2.115,
+    'tolerance': (2, 0),
+  },
+  'Great': {
+    'type': 'Great',
+    'ratio': 2.78,
+    'tolerance': (0, 0),
+  },
+  'Good': {
+    'type': 'Good',
+    'ratio': 2.85,
+    'tolerance': (-1, 0),
+  },
+  'Bad': {
+    'type': 'Bad',
+    'ratio': 4.37,
+    'tolerance': (2, 3),
+  },
+  'Miss': {
+    'type': 'Miss',
+    'ratio': 3.9,
+    'tolerance': (-1, 5),
+  },
+}
 maxComboDim = [((5, 10), (-5, 65)), ((0, 5), (0, 47))]
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
 tags = ['live', 'multilive', 'event']
