@@ -53,11 +53,16 @@ class ScoreAPI:
     '''Gets the different note counts of the image result'''
     noteScores = {}
 
-    for template in self.templates['noteTypes']:
-      tmp, type, ratio, tolerance = template
+    for type, value in self.templates['noteTypes'].items():
+      results = [(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED), x) for x, template in enumerate([v[0] for v in value])]
+      result, index = max(results, key=lambda x: x[0].max())
+
+      # Get the note type and the variables for OCR
+      tmp, noteType = value[index]
+      ratio = noteType['ratio']
+      tolerance = noteType['tolerance']
 
       # Get the location of the note type row
-      result = cv2.matchTemplate(image, tmp, cv2.TM_CCOEFF_NORMED)
       h, w, _ = tmp.shape
       y, x = np.unravel_index(np.argmax(result), result.shape)
 

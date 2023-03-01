@@ -8,6 +8,8 @@ import sys
 from consts import *
 from song_info import SongInfo
 
+from collections import defaultdict
+
 ASSETS_DIR = f'{sys.path[0]} + /../assets'
 
 def getDifficulty(d: str):
@@ -50,13 +52,12 @@ def fetchNoteTypes(path):
   '''Fetches the templates for the different note types
   \nReturns the name of the note type as well as variables for OCR ROI positioning'''
   # List of note types and variables for OCR matching
-  imgs = []
-  for x, type in enumerate(types):
-    ext = "png" if path == 'direct' else "jpg"
-    template = cv2.imread(f'{ASSETS_DIR}/{path}/score/{type}.{ext}')
+  imgs = defaultdict(list)
+  for key, value in noteTypes.items():
+    template = cv2.imread(f'{ASSETS_DIR}/{path}/score/{key}.{value["ext"]}')
     if not template is None:
       # If the template exists, add it to the list
-      imgs.append(( template, type, ratios[x], tolerances[x] ))
+      imgs[value['type']].append(( template, value ))
   return imgs
 
 def fetchDifficulties(path):
