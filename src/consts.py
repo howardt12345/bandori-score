@@ -34,6 +34,36 @@ noteTypes = {
     'tolerance': (-1, 5),
     'ext': 'jpg',
   },
+  'Perfect-MR': {
+    'type': 'Perfect',
+    'ratio': 2.115,
+    'tolerance': (1, -1),
+    'ext': 'png',
+  },
+  'Great-MR': {
+    'type': 'Great',
+    'ratio': 3.25,
+    'tolerance': (5, 0),
+    'ext': 'png',
+  },
+  'Good-MR': {
+    'type': 'Good',
+    'ratio': 3.45,
+    'tolerance': (4, 0),
+    'ext': 'png',
+  },
+  'Bad-MR': {
+    'type': 'Bad',
+    'ratio': 4.25,
+    'tolerance': (5, 2),
+    'ext': 'png',
+  },
+  'Miss-MR': {
+    'type': 'Miss',
+    'ratio': 4.35,
+    'tolerance': (5, 5),
+    'ext': 'png',
+  },
 }
 maxComboDim = [((5, 10), (-5, 65)), ((0, 5), (0, 47))]
 difficulties = ['Easy', 'Normal', 'Hard', 'Expert', 'Special']
