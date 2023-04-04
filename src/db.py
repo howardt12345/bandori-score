@@ -313,6 +313,15 @@ class Database:
       "userId": userId
     })
     logging.info(message)
+
+  async def get_log(self, userId: str):
+    return await self.db[userId]['log'].find().sort('_id', DESCENDING).to_list(length=None)
+
+  async def update_log(self, userId: str, log_id: str, body: dict):
+    await self.db[userId]['log'].update_one(
+      {'_id': ObjectId(log_id)},
+      {'$set': body}
+    )
   
   async def ping_server(self):
     try:
