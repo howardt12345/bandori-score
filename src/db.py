@@ -51,29 +51,29 @@ class Database:
       created_song = await self.db[userId]['songs'].find_one(
         {"_id": new_song.inserted_id}
       )
-      await self.log(userId, f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
+      await self.log(userId, 'POST', f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
       return created_song
     except errors.DuplicateKeyError:
-      await self.log(userId, f"POST: User {userId} tried to create a duplicate song: \n{song}")
+      await self.log(userId, 'POST', f"POST: User {userId} tried to create a duplicate song: \n{song}")
       return -1
     except Exception as e:
-      await self.log(userId, f"POST: User {userId} tried to create a song but failed: \n{song}")
+      await self.log(userId, 'POST', f"POST: User {userId} tried to create a song but failed: \n{song}")
       return None
 
 
   async def get_songs(self, userId: str):
     songs = self.db[userId]['songs'].find()
-    await self.log(userId, f"GET: User {userId} got all songs")
+    await self.log(userId, 'GET', f"GET: User {userId} got all songs")
     return await songs.to_list(length=None)
 
 
   async def get_song(self, userId: str, songId: str):
     try: 
       song = self.db[userId]['songs'].find_one({'_id': ObjectId(songId)})
-      await self.log(userId, f"GET: User {userId} got song with ID {songId}")
+      await self.log(userId, 'GET', f"GET: User {userId} got song with ID {songId}")
       return await song
     except Exception as e:
-      await self.log(userId, f"GET: User {userId} tried to get song with ID {songId} but failed")
+      await self.log(userId, 'GET', f"GET: User {userId} tried to get song with ID {songId} but failed")
       raise e
 
 
@@ -86,7 +86,7 @@ class Database:
     if tag and hasTag(tag):
       q['tag'] = getTag(tag)
     scores = self.db[userId]['songs'].find(q).sort('score', ASCENDING) 
-    await self.log(userId, f'GET: User {userId} got scores with query text "{songName}"')
+    await self.log(userId, 'GET', f'GET: User {userId} got scores with query text "{songName}"')
     return await scores.to_list(length=None)
 
 
@@ -103,7 +103,7 @@ class Database:
       songs = self.get_fast_slow(userId, q)
     else: 
       songs = self.db[userId]['songs'].find(q).sort(query, DESCENDING if order == 'DESC' else ASCENDING).limit(1)
-    await self.log(userId, f'GET: User {userId} got best {query} score with query text "{songName}"')
+    await self.log(userId, 'GET', f'GET: User {userId} got best {query} score with query text "{songName}"')
     lst = await songs.to_list(length=None)
     return lst if len(lst) > 0 else None
 
@@ -134,7 +134,7 @@ class Database:
         lst = await songs.to_list(length=None)
         res.extend(lst if len(lst) > 0 else [None])
 
-    await self.log(userId, f'GET: User {userId} got best scores with query text "{songName}"')
+    await self.log(userId, 'GET', f'GET: User {userId} got best scores with query text "{songName}"')
     return res
 
   async def update_song(self, userId: str, songId: str, song: SongInfo, tag: str = ""):
@@ -147,13 +147,13 @@ class Database:
     )
 
     updated_song = await self.db[userId]['songs'].find_one({"_id": ObjectId(songId)})
-    await self.log(userId, f"PUT: User {userId} updated song with ID {songId}", songId)
+    await self.log(userId, 'PUT', f"PUT: User {userId} updated song with ID {songId}", songId)
     return updated_song
 
 
   async def delete_song(self, userId: str, songId: str):
     await self.db[userId]['songs'].delete_one({"_id": ObjectId(songId)})
-    await self.log(userId, f"DELETE: User {userId} deleted song with ID {songId}", songId)
+    await self.log(userId, 'DELETE', f"DELETE: User {userId} deleted song with ID {songId}", songId)
 
 
   async def list_songs(self, userId: str, difficulty: str, tag: str):
@@ -198,7 +198,7 @@ class Database:
       },
       {'$sort': {'lowerSongName': ASCENDING}},
     ])
-    await self.log(userId, f"GET: User {userId} got song counts")
+    await self.log(userId, 'GET', f"GET: User {userId} got song counts")
     return await song_counts.to_list(length=None)
 
   
@@ -207,7 +207,7 @@ class Database:
     if tag and hasTag(tag):
       q['tag'] = getTag(tag)
     recent_songs = self.db[userId]['songs'].find(q).sort('_id', DESCENDING).limit(limit)
-    await self.log(userId, f"GET: User {userId} got recent songs")
+    await self.log(userId, 'GET', f"GET: User {userId} got recent songs")
     return await recent_songs.to_list(length=None)
 
   
@@ -305,8 +305,9 @@ class Database:
       {'$sort': {'score': DESCENDING}}
     ])
 
-  async def log(self, userId: str, message: str, songId: str = ""):
+  async def log(self, userId: str, action: str, message: str, songId: str = ""):
     await self.db[userId]['log'].insert_one({
+      "action": action,
       "message": message, 
       "timestamp": datetime.datetime.now(),
       "songId": ObjectId(songId),
