@@ -309,7 +309,7 @@ class Database:
     await self.db[userId]['log'].insert_one({
       "message": message, 
       "timestamp": datetime.datetime.now(),
-      "songId": songId,
+      "songId": ObjectId(songId),
       "userId": userId
     })
     logging.info(message)
