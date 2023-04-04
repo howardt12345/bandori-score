@@ -51,7 +51,8 @@ class Database:
       created_song = await self.db[userId]['songs'].find_one(
         {"_id": new_song.inserted_id}
       )
-      await self.log(userId, 'POST', f"POST: User {userId} created: \n{song}\n{created_song.get('_id', '')}", songId=created_song.get('_id', ''))
+      created_song_id = created_song.get('_id', '')
+      await self.log(userId, 'POST', f"POST: User {userId} created: \n{song}\n{created_song_id}", str(created_song_id))
       return created_song
     except errors.DuplicateKeyError:
       await self.log(userId, 'POST', f"POST: User {userId} tried to create a duplicate song: \n{song}")
