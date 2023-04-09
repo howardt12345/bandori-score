@@ -311,7 +311,7 @@ class Database:
       "action": action,
       "message": message, 
       "timestamp": datetime.datetime.now(),
-      "songId": ObjectId(songId),
+      "songId": ObjectId(songId) if songId else "",
       "userId": userId
     })
     logging.info(message)
