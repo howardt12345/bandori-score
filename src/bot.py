@@ -2,8 +2,8 @@
 
 import asyncio
 import discord
-from discord.ext import commands, tasks
-from discord.ext.commands import has_permissions
+from discord.ext import commands
+from discord.ext.commands import has_permissions, Context
 
 from dotenv import load_dotenv
 import os
@@ -157,6 +157,11 @@ async def ping(ctx: commands.Context):
   dbStatus = await db.ping_server()
   await ctx.send(f"Database: {'Connected' if dbStatus else 'Disconnected'}")
 
+@bot.event
+async def on_ready():
+  synced = await bot.tree.sync()
+  logging.info(f"Synced {len(synced)} commands: {', '.join([command.name for command in synced])}")
+
 async def main():
   logging.info("Starting bot")
   global scoreAPI
@@ -165,6 +170,7 @@ async def main():
   db = Database()
   # For some reason the bot logs twice after loading extensions
   await bot.load_extension("cogs.daily_reset")
+  await bot.load_extension("cogs.slash_commands")
   await bot.start(TOKEN)
 
 if __name__ == '__main__':

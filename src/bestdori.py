@@ -4,6 +4,7 @@ from difflib import get_close_matches
 SONGS_URL = 'https://bestdori.com/api/songs/'
 SONGS_ALL = 'all.5.json'
 BANDS_URL = 'https://bestdori.com/api/bands/all.1.json'
+EVENTS_URL = 'https://bestdori.com/api/events'
 def headers(path: str): 
   return {
     'authority': 'bestdori.com',
